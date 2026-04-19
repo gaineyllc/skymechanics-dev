@@ -43,10 +43,10 @@ services:
     ports:
       - "8080:8000"
     environment:
-      - FALKORDB_HOST=falkordb
-      - FALKORDB_PORT=6379
+      - host=falkordb
+      - port=6379
       - FALKORDB_PASSWORD=${FALKORDB_PASSWORD:-}
-      - VLLM_URL=http://100.69.118.20:8000
+      - vllm_url=http://100.69.118.20:8000
       - ENV=development
     depends_on:
       - falkordb

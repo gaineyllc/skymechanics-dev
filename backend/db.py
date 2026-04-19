@@ -5,11 +5,17 @@ Handles connection pooling and multi-tenant graph management.
 import redis
 from redis.commands.graph import Graph
 from typing import Optional
-from pydantic_settings import BaseSettings
+from pydantic_settings import BaseSettings, SettingsConfigDict
+from typing import Optional
 
 
 class DatabaseSettings(BaseSettings):
     """Database settings from environment variables."""
+    model_config = SettingsConfigDict(
+        env_prefix="",
+        env_file=".env",
+        extra="ignore"
+    )
     
     host: str = "localhost"
     port: int = 6379
@@ -18,6 +24,11 @@ class DatabaseSettings(BaseSettings):
 
 
 db_settings = DatabaseSettings()
+
+
+def get_db_settings() -> DatabaseSettings:
+    """Get database settings, prioritizing environment variables."""
+    return DatabaseSettings()
 
 
 class FalkorDBClient:
@@ -77,5 +88,5 @@ class FalkorDBClient:
         self.close()
 
 
-# Global client instance
+# Global client instance - uses settings from environment variables
 db_client = FalkorDBClient()
