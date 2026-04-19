@@ -1,0 +1,69 @@
+services:
+  # FalkorDB - Graph Database (multi-tenancy enabled)
+  falkordb:
+    image: falkordb/falkordb-server:latest
+    container_name: skymechanics-falkordb
+    ports:
+      - "6379:6379"  # Redis protocol
+      - "3000:3000"  # FalkorDB Browser (HTTP)
+    volumes:
+      - falkordb-data:/data
+      - ./scripts:/scripts
+    environment:
+      - REDIS_MODULE=/falkordb/falkordb.so
+      - MULTI_TENANCY_ENABLED=true
+      - FALKORDB_MAX_GRAPHS=100
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  # FalkorDB Browser (optional, for development)
+  browser:
+    image: falkordb/falkordb-browser:latest
+    container_name: skymechanics-browser
+    ports:
+      - "3001:3000"
+    environment:
+      - REDIS_HOST=falkordb
+      - REDIS_PORT=6379
+      - REDIS_DB=0
+    depends_on:
+      - falkordb
+    restart: unless-stopped
+
+  # FastAPI Backend
+  api:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: skymechanics-api
+    ports:
+      - "8080:8000"
+    environment:
+      - FALKORDB_HOST=falkordb
+      - FALKORDB_PORT=6379
+      - FALKORDB_PASSWORD=${FALKORDB_PASSWORD:-}
+      - VLLM_URL=http://100.69.118.20:8000
+      - ENV=development
+    depends_on:
+      - falkordb
+    volumes:
+      - ./backend:/app
+      - /home/gaineyllc/.openclaw/workspace:/workspace:ro
+    restart: unless-stopped
+
+  # React Frontend - rebuilt on each start
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: skymechanics-frontend
+    ports:
+      - "3003:3000"
+    restart: unless-stopped
+
+volumes:
+  falkordb-data:
