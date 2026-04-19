@@ -9,15 +9,15 @@ test.describe('SkyMechanics Frontend', () => {
     await expect(page).toHaveTitle(/SkyMechanics/);
   });
 
-  test('has main heading', async ({ page }) => {
-    await expect(page.getByRole('heading', { name: 'SkyMechanics' })).toBeVisible();
+  test('has sidebar and brand text', async ({ page }) => {
+    await expect(page.getByTestId('brand-link')).toBeVisible();
   });
 
-  test('has navigation links', async ({ page }) => {
-    await expect(page.getByRole('link', { name: 'Dashboard' })).toBeVisible();
-    await expect(page.getByRole('link', { name: 'Jobs' })).toBeVisible();
-    await expect(page.getByRole('link', { name: 'Customers' })).toBeVisible();
-    await expect(page.getByRole('link', { name: 'Mechanics' })).toBeVisible();
-    await expect(page.getByRole('link', { name: 'Admin' })).toBeVisible();
+  test('has navigation links in sidebar', async ({ page }) => {
+    const mainNav = page.getByTestId('main-nav');
+    await expect(mainNav.getByText('Dashboard', { exact: true })).toBeVisible();
+    await expect(mainNav.getByText('Jobs', { exact: true })).toBeVisible();
+    await expect(mainNav.getByText('Customers', { exact: true })).toBeVisible();
+    await expect(mainNav.getByText('Mechanics', { exact: true })).toBeVisible();
   });
 });

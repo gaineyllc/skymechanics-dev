@@ -12,7 +12,7 @@ const SidebarContainer = styled('div', {
   top: 0,
   width: '250px',
   overflowY: 'auto',
-})
+}, ({ $layoutTestId }) => ($layoutTestId ? { 'data-testid': $layoutTestId } : {}))
 
 const SidebarItem = styled(Link, {
   display: 'flex',
@@ -88,7 +88,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
     <div>
       <SidebarContainer>
         <Header>
-          <Link to="/" style={{ textDecoration: 'none', color: 'inherit' }}>
+          <Link to="/" style={{ textDecoration: 'none', color: 'inherit' }} data-testid="brand-link">
             <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#ffffff' }}>
               SkyMechanics
             </div>
@@ -98,7 +98,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
           </Link>
         </Header>
 
-        <NavGroup>
+        <NavGroup data-testid="main-nav">
           <NavLabel>MAIN NAVIGATION</NavLabel>
           {navItems.map((item) => (
             <MenuItem
@@ -109,7 +109,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
           ))}
         </NavGroup>
 
-        <NavGroup>
+        <NavGroup data-testid="admin-nav">
           <NavLabel>ADMINISTRATION</NavLabel>
           {adminItems.map((item) => (
             <MenuItem
