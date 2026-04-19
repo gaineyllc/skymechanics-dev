@@ -231,8 +231,65 @@ async def create_relationship(request: RelationshipCreateRequest):
 
 # ========== Business Logic Endpoints ==========
 
-@app.post("/customers", tags=["Customers"])
-async def create_customer(request: CustomerCreateRequest):
+@app.get("/customers", tags=["Customers"])
+async def list_customers():
+    """List all customers."""
+    try:
+        graph = db_client.get_graph()
+        
+        query = "MATCH (c:Customer) RETURN c ORDER BY c.name"
+        result = graph.query(query)
+        
+        customers = []
+        for row in result.result_set:
+            node = row[0]
+            customers.append({
+                "node_id": node.id,
+                "label": "Customer",
+                "properties": {
+                    "name": node.properties.get("name", ""),
+                    "email": node.properties.get("email", ""),
+                    "phone": node.properties.get("phone", ""),
+                    "address": node.properties.get("address", "")
+                }
+            })
+        
+        return customers
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/jobs", tags=["Jobs"])
+async def list_jobs():
+    """List all jobs."""
+    try:
+        graph = db_client.get_graph()
+        
+        query = "MATCH (j:Job) RETURN j ORDER BY j.priority DESC, j.status"
+        result = graph.query(query)
+        
+        jobs = []
+        for row in result.result_set:
+            node = row[0]
+            jobs.append({
+                "node_id": node.id,
+                "label": "Job",
+                "properties": {
+                    "title": node.properties.get("title", ""),
+                    "description": node.properties.get("description", ""),
+                    "status": node.properties.get("status", "pending"),
+                    "priority": node.properties.get("priority", "medium"),
+                    "customer_id": node.properties.get("customer_id", 0)
+                }
+            })
+        
+        return jobs
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/jobs/{job_id}", tags=["Jobs"])
+async def get_job(job_id: int):
     """Create a new customer."""
     try:
         graph = db_client.get_graph()
@@ -316,6 +373,34 @@ async def create_job(request: JobCreateRequest):
         }
     except HTTPException:
         raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/mechanics", tags=["Mechanics"])
+async def list_mechanics():
+    """List all mechanics."""
+    try:
+        graph = db_client.get_graph()
+        
+        query = "MATCH (m:Mechanic) RETURN m ORDER BY m.name"
+        result = graph.query(query)
+        
+        mechanics = []
+        for row in result.result_set:
+            node = row[0]
+            mechanics.append({
+                "node_id": node.id,
+                "label": "Mechanic",
+                "properties": {
+                    "name": node.properties.get("name", ""),
+                    "email": node.properties.get("email", ""),
+                    "phone": node.properties.get("phone", ""),
+                    "specialties": node.properties.get("specialties", [])
+                }
+            })
+        
+        return mechanics
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
