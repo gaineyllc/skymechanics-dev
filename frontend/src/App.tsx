@@ -12,6 +12,9 @@ import { JobDetail } from './pages/JobDetail'
 import { Customers } from './pages/Customers'
 import { Mechanics } from './pages/Mechanics'
 import { Admin } from './pages/Admin'
+import Onboarding from './pages/Onboarding'
+import OnboardingSuccess from './pages/OnboardingSuccess'
+import QuickStartWizard from './components/QuickStartWizard'
 
 const engine = new Styletron()
 
@@ -23,7 +26,10 @@ export default function App() {
           <Router>
             <Layout>
               <Routes>
-                <Route path="/" element={<Dashboard />} />
+                <Route path="/" element={<Onboarding />} />
+                <Route path="/onboarding-success" element={<OnboardingSuccess />} />
+                <Route path="/quick-start" element={<QuickStartWizard />} />
+                <Route path="/dashboard" element={<Dashboard />} />
                 <Route path="/jobs" element={<Jobs />} />
                 <Route path="/jobs/:id" element={<JobDetail />} />
                 <Route path="/customers" element={<Customers />} />

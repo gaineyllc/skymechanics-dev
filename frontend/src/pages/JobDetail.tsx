@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react'
 import { styled } from 'baseui'
-import { Card, Button, KIND, SIZE, Heading, Spinner, Notification, TYPE } from 'baseui'
 import { Link, useParams, useNavigate } from 'react-router-dom'
 import { fetchJobById, updateJob, deleteJob, Job } from '../services/api'
 
@@ -20,8 +19,10 @@ const JobHeader = styled('div', {
   borderBottom: '1px solid #e0e0e0',
 })
 
-const JobTitle = styled(Heading, {
+const JobTitle = styled('h1', {
   margin: 0,
+  fontSize: '24px',
+  color: '#1a1a1a',
 })
 
 const JobId = styled('span', {
@@ -36,8 +37,10 @@ const JobInfo = styled('div', {
   marginBottom: '24px',
 })
 
-const InfoCard = styled(Card, {
+const InfoCard = styled('div', {
   backgroundColor: '#f8f9fa',
+  padding: '16px',
+  borderRadius: '8px',
 })
 
 const InfoLabel = styled('div', {
@@ -48,70 +51,170 @@ const InfoLabel = styled('div', {
 
 const InfoValue = styled('div', {
   fontSize: '16px',
-  fontWeight: '600',
+  fontWeight: '500',
   color: '#1a1a1a',
 })
 
-const Timeline = styled('div', {
-  display: 'flex',
-  alignItems: 'center',
-  gap: '16px',
+const Description = styled('div', {
   marginBottom: '24px',
 })
 
-const TimelineItem = styled('div', {
-  display: 'flex',
-  flexDirection: 'column',
-  alignItems: 'center',
-  flex: 1,
-})
-
-const TimelineCircle = styled('div', {
-  width: '40px',
-  height: '40px',
-  borderRadius: '50%',
-  backgroundColor: '#e0e0e0',
-  display: 'flex',
-  alignItems: 'center',
-  justifyContent: 'center',
-  marginBottom: '8px',
-})
-
-const TimelineCircleActive = styled(TimelineCircle, {
-  backgroundColor: '#007AFF',
-  color: '#ffffff',
-})
-
-const TimelineLabel = styled('div', {
+const DescriptionLabel = styled('div', {
   fontSize: '14px',
+  fontWeight: '600',
+  marginBottom: '8px',
+  color: '#1a1a1a',
+})
+
+const DescriptionText = styled('div', {
+  fontSize: '14px',
+  color: '#333333',
+  lineHeight: '1.6',
+})
+
+const StatusBadge = styled('div', {
+  padding: '4px 12px',
+  borderRadius: '16px',
+  fontSize: '12px',
   fontWeight: '600',
 })
 
-const TimelineLabelActive = styled(TimelineLabel, {
-  color: '#007AFF',
+const StatusOpen = styled(StatusBadge, {
+  backgroundColor: '#E8F5E9',
+  color: '#2E7D32',
 })
 
-const TabBar = styled('div', {
+const StatusPending = styled(StatusBadge, {
+  backgroundColor: '#FFF3E0',
+  color: '#F57C00',
+})
+
+const StatusCompleted = styled(StatusBadge, {
+  backgroundColor: '#E3F2FD',
+  color: '#1565C0',
+})
+
+const Buttons = styled('div', {
   display: 'flex',
   gap: '8px',
-  marginBottom: '24px',
+  marginTop: '24px',
 })
 
-const TabButton = styled('button', {
-  padding: '12px 24px',
-  borderRadius: '8px',
-  border: 'none',
-  backgroundColor: '#f5f5f5',
-  color: '#666666',
-  cursor: 'pointer',
-  fontSize: '14px',
-  fontWeight: '600',
-})
+const Notification = ({ onClose, kind, title, subtitle, autoHide, autoHideDuration }: any) => {
+  if (autoHide) {
+    useEffect(() => {
+      const timer = setTimeout(() => {
+        onClose && onClose()
+      }, autoHideDuration || 3000)
+      return () => clearTimeout(timer)
+    }, [])
+  }
 
-const TabButtonActive = styled(TabButton, {
-  backgroundColor: '#007AFF',
-  color: '#ffffff',
-})
+  const kinds = {
+    negative: { backgroundColor: '#ffe5e5', color: '#d00' },
+    warning: { backgroundColor: '#fff3e0', color: '#f57c00' },
+    positive: { backgroundColor: '#e8f5e9', color: '#2e7d32' },
+    info: { backgroundColor: '#e3f2fd', color: '#1565c0' },
+  }
+
+  return (
+    <div
+      style={{
+        padding: '16px',
+        borderRadius: '8px',
+        marginBottom: '16px',
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        ...kinds[kind as keyof typeof kinds],
+      }}
+    >
+      <div>
+        <div style={{ fontWeight: '600' }}>{title}</div>
+        {subtitle && <div style={{ fontSize: '14px' }}>{subtitle}</div>}
+      </div>
+      <button
+        onClick={onClose}
+        style={{
+          background: 'none',
+          border: 'none',
+          fontSize: '20px',
+          cursor: 'pointer',
+          color: 'inherit',
+        }}
+      >
+        ×
+      </button>
+    </div>
+  )
+}
+
+const Button = ({ kind = 'primary', onClick, children, disabled = false, size = 'default' }: any) => {
+  const sizes = {
+    compact: { padding: '6px 12px', fontSize: '12px' },
+    default: { padding: '8px 16px', fontSize: '14px' },
+    large: { padding: '12px 24px', fontSize: '16px' },
+  }
+
+  const baseStyles = {
+    ...sizes[size as keyof typeof sizes],
+    borderRadius: '4px',
+    border: 'none',
+    cursor: 'pointer',
+    fontWeight: '500',
+    transition: 'all 0.2s',
+  }
+
+  const kinds = {
+    primary: {
+      backgroundColor: '#007AFF',
+      color: '#ffffff',
+      '&:hover': { backgroundColor: '#005ecb' },
+    },
+    secondary: {
+      backgroundColor: '#f0f0f0',
+      color: '#333333',
+      '&:hover': { backgroundColor: '#e0e0e0' },
+    },
+    tertiary: {
+      backgroundColor: 'transparent',
+      color: '#666666',
+      '&:hover': { backgroundColor: '#f0f0f0' },
+    },
+    negative: {
+      backgroundColor: '#ff4d4d',
+      color: '#ffffff',
+      '&:hover': { backgroundColor: '#cc0000' },
+    },
+  }
+
+  return (
+    <button
+      onClick={onClick}
+      disabled={disabled}
+      style={{
+        ...baseStyles,
+        ...kinds[kind as keyof typeof kinds],
+        ...(disabled ? { opacity: 0.5, cursor: 'not-allowed' } : {}),
+      }}
+    >
+      {children}
+    </button>
+  )
+}
+
+const KIND = {
+  primary: 'primary',
+  secondary: 'secondary',
+  tertiary: 'tertiary',
+  negative: 'negative',
+}
+
+const SIZE = {
+  compact: 'compact',
+  default: 'default',
+  large: 'large',
+}
 
 export function JobDetail() {
   const { id } = useParams<{ id: string }>()
@@ -124,7 +227,7 @@ export function JobDetail() {
     const loadJob = async () => {
       if (!id) return
       try {
-        const data = await fetchJobById(Number(id))
+        const data = await fetchJobById(id)
         setJob(data)
       } catch (err) {
         setError('Failed to load job')
@@ -134,16 +237,6 @@ export function JobDetail() {
     }
     loadJob()
   }, [id])
-
-  const handleDelete = async () => {
-    if (!job || !confirm('Are you sure you want to delete this job?')) return
-    try {
-      await deleteJob(job.node_id)
-      navigate('/jobs')
-    } catch (err) {
-      setError('Failed to delete job')
-    }
-  }
 
   const handleUpdate = async (status: string) => {
     if (!job) return
@@ -155,11 +248,23 @@ export function JobDetail() {
     }
   }
 
+  const handleDelete = async () => {
+    if (!job) return
+    if (window.confirm('Are you sure you want to delete this job?')) {
+      try {
+        await deleteJob(job.node_id)
+        navigate('/jobs')
+      } catch (err) {
+        setError('Failed to delete job')
+      }
+    }
+  }
+
   if (loading) {
     return (
       <JobDetailContainer>
         <div style={{ textAlign: 'center', padding: '40px' }}>
-          <Spinner size={48} />
+          <div style={{ fontSize: '48px', marginBottom: '16px' }}>⏳</div>
           <p>Loading job...</p>
         </div>
       </JobDetailContainer>
@@ -170,15 +275,16 @@ export function JobDetail() {
     return (
       <JobDetailContainer>
         <Notification
-          kind={TYPE.negative}
+          onClose={() => setError(null)}
+          kind="negative"
           title="Error"
           subtitle={error}
           autoHide
-          autoHideDuration={5000}
+          autoHideDuration={3000}
         />
-        <Link to="/jobs">
-          <Button kind={KIND.secondary}>Back to Jobs</Button>
-        </Link>
+        <Button kind={KIND.secondary} onClick={() => navigate('/jobs')}>
+          Back to Jobs
+        </Button>
       </JobDetailContainer>
     )
   }
@@ -186,41 +292,40 @@ export function JobDetail() {
   if (!job) {
     return (
       <JobDetailContainer>
-        <p>Job not found</p>
-        <Link to="/jobs">
-          <Button kind={KIND.secondary}>Back to Jobs</Button>
-        </Link>
+        <p style={{ textAlign: 'center', color: '#666' }}>Job not found</p>
+        <Button kind={KIND.secondary} onClick={() => navigate('/jobs')}>
+          Back to Jobs
+        </Button>
       </JobDetailContainer>
     )
   }
-
-  const statusOptions = ['pending', 'open', 'completed']
 
   return (
     <JobDetailContainer>
       <JobHeader>
         <div>
-          <JobTitle>Job #{job.node_id}</JobTitle>
-          <JobId>Created: April 18, 2026</JobId>
+          <JobId>Job #{job.node_id}</JobId>
+          <JobTitle>{job.properties.title}</JobTitle>
         </div>
-        <div style={{ display: 'flex', gap: '8px' }}>
-          <Button kind="secondary" size={SIZE.compact} onClick={() => navigate(-1)}>
-            Back
-          </Button>
-          <Button kind={KIND.secondary} size={SIZE.compact} onClick={() => alert('Edit dialog not yet implemented')}>
-            Edit
-          </Button>
-          <Button kind={KIND.primary} size={SIZE.compact} onClick={handleDelete}>
-            Delete
-          </Button>
+        <div>
+          {job.properties.status === 'open' && <StatusOpen>Open</StatusOpen>}
+          {job.properties.status === 'pending' && <StatusPending>Pending</StatusPending>}
+          {job.properties.status === 'completed' && <StatusCompleted>Completed</StatusCompleted>}
         </div>
       </JobHeader>
 
+      {error && (
+        <Notification
+          onClose={() => setError(null)}
+          kind="negative"
+          title="Error"
+          subtitle={error}
+          autoHide
+          autoHideDuration={3000}
+        />
+      )}
+
       <JobInfo>
-        <InfoCard>
-          <InfoLabel>Customer</InfoLabel>
-          <InfoValue>Customer #{job.properties.customer_id}</InfoValue>
-        </InfoCard>
         <InfoCard>
           <InfoLabel>Status</InfoLabel>
           <InfoValue>{job.properties.status}</InfoValue>
@@ -230,97 +335,42 @@ export function JobDetail() {
           <InfoValue>{job.properties.priority}</InfoValue>
         </InfoCard>
         <InfoCard>
-          <InfoLabel>Estimated Cost</InfoLabel>
-          <InfoValue>${(Math.random() * 1000 + 100).toFixed(2)}</InfoValue>
+          <InfoLabel>Customer</InfoLabel>
+          <InfoValue>{job.properties.customer_id}</InfoValue>
+        </InfoCard>
+        <InfoCard>
+          <InfoLabel>Aircraft</InfoLabel>
+          <InfoValue>{job.properties.aircraft_id}</InfoValue>
+        </InfoCard>
+        <InfoCard>
+          <InfoLabel>Mechanic</InfoLabel>
+          <InfoValue>{job.properties.mechanic_id}</InfoValue>
         </InfoCard>
       </JobInfo>
 
-      <Timeline>
-        <TimelineItem>
-          <TimelineCircleActive>
-            <span>1</span>
-          </TimelineCircleActive>
-          <TimelineLabelActive>Requested</TimelineLabelActive>
-        </TimelineItem>
-        <div style={{ flex: 1, height: '2px', backgroundColor: '#e0e0e0' }} />
-        <TimelineItem>
-          <TimelineCircleActive>
-            <span>2</span>
-          </TimelineCircleActive>
-          <TimelineLabelActive>Assigned</TimelineLabelActive>
-        </TimelineItem>
-        <div style={{ flex: 1, height: '2px', backgroundColor: '#e0e0e0' }} />
-        <TimelineItem>
-          <TimelineCircle>
-            <span>3</span>
-          </TimelineCircle>
-          <TimelineLabel>Completed</TimelineLabel>
-        </TimelineItem>
-        <div style={{ flex: 1, height: '2px', backgroundColor: '#e0e0e0' }} />
-        <TimelineItem>
-          <TimelineCircle>
-            <span>4</span>
-          </TimelineCircle>
-          <TimelineLabel>Approved</TimelineLabel>
-        </TimelineItem>
-        <div style={{ flex: 1, height: '2px', backgroundColor: '#e0e0e0' }} />
-        <TimelineItem>
-          <TimelineCircle>
-            <span>5</span>
-          </TimelineCircle>
-          <TimelineLabel>PAID</TimelineLabel>
-        </TimelineItem>
-      </Timeline>
+      <Description>
+        <DescriptionLabel>Description</DescriptionLabel>
+        <DescriptionText>{job.properties.description}</DescriptionText>
+      </Description>
 
-      <TabBar>
-        <TabButtonActive>Overview</TabButtonActive>
-        <TabButton>Timeline</TabButton>
-        <TabButton>Documents</TabButton>
-        <TabButton>Communication</TabButton>
-        <TabButton>Invoice</TabButton>
-      </TabBar>
-
-      <Card>
-        <Heading level="h3" marginBottom="16px">
-          Job Details
-        </Heading>
-        <p style={{ color: '#333333', marginBottom: '16px' }}>
-          <strong>Service Requested:</strong> {job.properties.title}
-        </p>
-        <p style={{ color: '#333333', marginBottom: '16px' }}>
-          <strong>Description:</strong> {job.properties.description}
-        </p>
-        <p style={{ color: '#333333', marginBottom: '16px' }}>
-          <strong>Parts Required:</strong>
-        </p>
-        <ul style={{ color: '#333333', marginBottom: '16px', paddingLeft: '24px' }}>
-          <li>Piston Rings Set - $150.00</li>
-          <li>Oil Filter - $25.00</li>
-          <li>Spark Plugs (4-pack) - $40.00</li>
-          <li>Engine Oil (5QT) - $35.00</li>
-        </ul>
-        <p style={{ color: '#333333' }}>
-          <strong>Labor:</strong> 8 hours @ $75/hour = $600.00
-        </p>
-      </Card>
-
-      <Card style={{ marginTop: '24px' }}>
-        <Heading level="h3" marginBottom="16px">
-          Change Status
-        </Heading>
-        <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-          {statusOptions.map((status) => (
-            <Button
-              key={status}
-              kind={job.properties.status === status ? KIND.primary : KIND.secondary}
-              size={SIZE.compact}
-              onClick={() => handleUpdate(status)}
-            >
-              {status.charAt(0).toUpperCase() + status.slice(1)}
-            </Button>
-          ))}
-        </div>
-      </Card>
+      <Buttons>
+        {job.properties.status !== 'completed' && (
+          <Button kind={KIND.primary} onClick={() => handleUpdate('completed')}>
+            Mark Complete
+          </Button>
+        )}
+        {job.properties.status !== 'open' && job.properties.status !== 'completed' && (
+          <Button kind={KIND.secondary} onClick={() => handleUpdate('open')}>
+            Set Open
+          </Button>
+        )}
+        <Button kind={KIND.tertiary} onClick={() => navigate('/jobs')}>
+          Cancel
+        </Button>
+        <Button kind={KIND.negative} onClick={handleDelete}>
+          Delete
+        </Button>
+      </Buttons>
     </JobDetailContainer>
   )
 }

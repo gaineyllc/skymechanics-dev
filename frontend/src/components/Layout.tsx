@@ -1,18 +1,7 @@
 import React from 'react'
 import { useLocation, Link } from 'react-router-dom'
 import { styled } from 'baseui'
-import { 
-  Grid, 
-  GridItem, 
-  Block, 
-  Drawer, 
-  Button, 
-  KIND, 
-  SIZE, 
-  Disclosure, 
-  ChevronDown, 
-  ChevronUp 
-} from 'baseui'
+import { ChevronDown, ChevronUp } from 'baseui/icon'
 
 const SidebarContainer = styled('div', {
   backgroundColor: '#1a1a1a',
@@ -50,6 +39,29 @@ const ContentContainer = styled('div', {
   minHeight: '100vh',
 })
 
+const Header = styled('div', {
+  marginBottom: '24px',
+})
+
+const NavGroup = styled('div', {
+  marginBottom: '16px',
+})
+
+const NavLabel = styled('div', {
+  fontSize: '14px',
+  fontWeight: 'bold',
+  color: '#999999',
+  marginBottom: '8px',
+})
+
+const DisclosureContainer = styled('div', {
+  marginTop: 'auto',
+})
+
+const DisclosureHeader = styled('div', {
+  marginBottom: '8px',
+})
+
 export function Layout({ children }: { children: React.ReactNode }) {
   const location = useLocation()
   const [isExpanded, setIsExpanded] = React.useState(false)
@@ -65,89 +77,95 @@ export function Layout({ children }: { children: React.ReactNode }) {
     { path: '/admin', label: 'Settings' },
   ]
 
+  const additionalItems = [
+    { path: '/settings', label: 'Settings' },
+    { path: '/legal', label: 'Legal & Compliance' },
+    { path: '/payroll', label: 'Payroll (TriNet)' },
+    { path: '/reporting', label: 'Federal Reporting' },
+  ]
+
   return (
-    <Grid>
-      <GridItem span={2}>
-        <SidebarContainer>
-          <Block marginBottom="24px">
-            <Link to="/" style={{ textDecoration: 'none', color: 'inherit' }}>
-              <Block fontSize="24px" fontWeight="bold" color="#ffffff">
-                SkyMechanics
-              </Block>
-              <Block fontSize="12px" color="#999999">
-                Aircraft Maintenance
-              </Block>
-            </Link>
-          </Block>
+    <div>
+      <SidebarContainer>
+        <Header>
+          <Link to="/" style={{ textDecoration: 'none', color: 'inherit' }}>
+            <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#ffffff' }}>
+              SkyMechanics
+            </div>
+            <div style={{ fontSize: '12px', color: '#999999' }}>
+              Aircraft Maintenance
+            </div>
+          </Link>
+        </Header>
 
-          <Block marginBottom="16px">
-            <Block fontSize="14px" fontWeight="bold" color="#999999" marginBottom="8px">
-              MAIN NAVIGATION
-            </Block>
-            {navItems.map((item) => {
-              const isActive = location.pathname === item.path
-              return isActive ? (
-                <ActiveItem key={item.path} to={item.path}>
-                  {item.label}
-                </ActiveItem>
-              ) : (
-                <SidebarItem key={item.path} to={item.path}>
-                  {item.label}
-                </SidebarItem>
-              )
-            })}
-          </Block>
+        <NavGroup>
+          <NavLabel>MAIN NAVIGATION</NavLabel>
+          {navItems.map((item) => (
+            <MenuItem
+              key={item.path}
+              item={item}
+              isActive={location.pathname === item.path}
+            />
+          ))}
+        </NavGroup>
 
-          <Block>
-            <Block fontSize="14px" fontWeight="bold" color="#999999" marginBottom="8px">
-              ADMINISTRATION
-            </Block>
-            {adminItems.map((item) => {
-              const isActive = location.pathname === item.path
-              return isActive ? (
-                <ActiveItem key={item.path} to={item.path}>
-                  {item.label}
-                </ActiveItem>
-              ) : (
-                <SidebarItem key={item.path} to={item.path}>
-                  {item.label}
-                </SidebarItem>
-              )
-            })}
-          </Block>
+        <NavGroup>
+          <NavLabel>ADMINISTRATION</NavLabel>
+          {adminItems.map((item) => (
+            <MenuItem
+              key={item.path}
+              item={item}
+              isActive={location.pathname === item.path}
+            />
+          ))}
+        </NavGroup>
 
-          <Block marginTop="auto">
-            <Button
-              kind={KIND.secondary}
-              size={SIZE.compact}
+        <DisclosureContainer>
+          <DisclosureHeader>
+            <button
               onClick={() => setIsExpanded(!isExpanded)}
-              endEnhancer={() => isExpanded ? <ChevronUp /> : <ChevronDown />}
-              fullWidth
+              style={{
+                width: '100%',
+                padding: '8px 12px',
+                background: 'transparent',
+                border: '1px solid #555',
+                borderRadius: '4px',
+                color: '#fff',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '8px',
+              }}
             >
               More Options
-            </Button>
-            {isExpanded && (
-              <Disclosure
-                isOpen={true}
-                heading="Additional Options"
-                overrides={{
-                  Body: { style: { marginTop: '8px' } },
-                }}
-              >
-                <Block paddingLeft="16px">
-                  <SidebarItem to="/settings">Settings</SidebarItem>
-                  <SidebarItem to="/legal">Legal & Compliance</SidebarItem>
-                  <SidebarItem to="/payroll">Payroll (TriNet)</SidebarItem>
-                  <SidebarItem to="/reporting">Federal Reporting</SidebarItem>
-                </Block>
-              </Disclosure>
-            )}
-          </Block>
-        </SidebarContainer>
-      </GridItem>
-      <GridItem span={10}>
-        <ContentContainer>{children}</ContentContainer>
-      </GridItem>
-    </Grid>
+              {isExpanded ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
+            </button>
+          </DisclosureHeader>
+          {isExpanded && (
+            <div style={{ paddingLeft: '16px', marginTop: '8px' }}>
+              {additionalItems.map((item) => (
+                <SidebarItem key={item.path} to={item.path}>
+                  {item.label}
+                </SidebarItem>
+              ))}
+            </div>
+          )}
+        </DisclosureContainer>
+      </SidebarContainer>
+      <ContentContainer>{children}</ContentContainer>
+    </div>
+  )
+}
+
+function MenuItem({ item, isActive }: { item: { path: string; label: string }; isActive: boolean }) {
+  return isActive ? (
+    <ActiveItem key={item.path} to={item.path}>
+      {item.label}
+    </ActiveItem>
+  ) : (
+    <SidebarItem key={item.path} to={item.path}>
+      {item.label}
+    </SidebarItem>
   )
 }

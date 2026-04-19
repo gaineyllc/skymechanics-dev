@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react'
 import { styled } from 'baseui'
-import { Card, Button, KIND, SIZE, Spinner, Notification, TYPE } from 'baseui'
 import { fetchMechanics, createMechanic, Mechanic } from '../services/api'
 import { CreateMechanicModal } from '../components/CreateMechanicModal'
 
@@ -44,10 +43,121 @@ const MechanicName = styled('div', {
   fontSize: '16px',
 })
 
-const MechanicActions = styled('div', {
-  display: 'flex',
-  gap: '8px',
-})
+const Button = ({ kind = 'primary', onClick, children, disabled = false, size = 'default' }: any) => {
+  const sizes = {
+    compact: { padding: '6px 12px', fontSize: '12px' },
+    default: { padding: '8px 16px', fontSize: '14px' },
+    large: { padding: '12px 24px', fontSize: '16px' },
+  }
+
+  const baseStyles = {
+    ...sizes[size as keyof typeof sizes],
+    borderRadius: '4px',
+    border: 'none',
+    cursor: 'pointer',
+    fontWeight: '500',
+    transition: 'all 0.2s',
+  }
+
+  const kinds = {
+    primary: {
+      backgroundColor: '#007AFF',
+      color: '#ffffff',
+      '&:hover': { backgroundColor: '#005ecb' },
+    },
+    secondary: {
+      backgroundColor: '#f0f0f0',
+      color: '#333333',
+      '&:hover': { backgroundColor: '#e0e0e0' },
+    },
+    tertiary: {
+      backgroundColor: 'transparent',
+      color: '#666666',
+      '&:hover': { backgroundColor: '#f0f0f0' },
+    },
+    negative: {
+      backgroundColor: '#ff4d4d',
+      color: '#ffffff',
+      '&:hover': { backgroundColor: '#cc0000' },
+    },
+  }
+
+  return (
+    <button
+      onClick={onClick}
+      disabled={disabled}
+      style={{
+        ...baseStyles,
+        ...kinds[kind as keyof typeof kinds],
+        ...(disabled ? { opacity: 0.5, cursor: 'not-allowed' } : {}),
+      }}
+    >
+      {children}
+    </button>
+  )
+}
+
+const KIND = {
+  primary: 'primary',
+  secondary: 'secondary',
+  tertiary: 'tertiary',
+  negative: 'negative',
+}
+
+const SIZE = {
+  compact: 'compact',
+  default: 'default',
+  large: 'large',
+}
+
+const Notification = ({ onClose, kind, title, subtitle, autoHide, autoHideDuration }: any) => {
+  if (autoHide) {
+    useEffect(() => {
+      const timer = setTimeout(() => {
+        onClose && onClose()
+      }, autoHideDuration || 3000)
+      return () => clearTimeout(timer)
+    }, [])
+  }
+
+  const kinds = {
+    negative: { backgroundColor: '#ffe5e5', color: '#d00' },
+    warning: { backgroundColor: '#fff3e0', color: '#f57c00' },
+    positive: { backgroundColor: '#e8f5e9', color: '#2e7d32' },
+    info: { backgroundColor: '#e3f2fd', color: '#1565c0' },
+  }
+
+  return (
+    <div
+      style={{
+        padding: '16px',
+        borderRadius: '8px',
+        marginBottom: '16px',
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        ...kinds[kind as keyof typeof kinds],
+      }}
+    >
+      <div>
+        <div style={{ fontWeight: '600' }}>{title}</div>
+        {subtitle && <div style={{ fontSize: '14px' }}>{subtitle}</div>}
+      </div>
+      <button
+        onClick={onClose}
+        style={{
+          background: 'none',
+          border: 'none',
+          fontSize: '20px',
+          cursor: 'pointer',
+          color: 'inherit',
+        }}
+      >
+        ×
+      </button>
+    </div>
+  )
+}
 
 export function Mechanics() {
   const [mechanics, setMechanics] = useState<Mechanic[]>([])
@@ -78,12 +188,12 @@ export function Mechanics() {
       <MechanicsContainer>
         <MechanicsHeader>
           <MechanicsTitle>Mechanics</MechanicsTitle>
-          <Button kind={KIND.primary} size={SIZE.compact} onClick={handleCreateMechanic}>
+          <Button kind={KIND.primary} onClick={handleCreateMechanic}>
             Add Mechanic
           </Button>
         </MechanicsHeader>
         <div style={{ textAlign: 'center', padding: '40px' }}>
-          <Spinner size={48} />
+          <div style={{ fontSize: '48px', marginBottom: '16px' }}>⏳</div>
           <p>Loading mechanics...</p>
         </div>
       </MechanicsContainer>
@@ -94,7 +204,7 @@ export function Mechanics() {
     <MechanicsContainer>
       <MechanicsHeader>
         <MechanicsTitle>Mechanics ({mechanics.length})</MechanicsTitle>
-        <Button kind={KIND.primary} size={SIZE.compact} onClick={handleCreateMechanic}>
+        <Button kind={KIND.primary} onClick={handleCreateMechanic}>
           Add Mechanic
         </Button>
       </MechanicsHeader>
@@ -102,7 +212,7 @@ export function Mechanics() {
       {error && (
         <Notification
           onClose={() => setError(null)}
-          kind={TYPE.negative}
+          kind="negative"
           title="Error"
           subtitle={error}
           autoHide
@@ -115,24 +225,26 @@ export function Mechanics() {
           <p style={{ textAlign: 'center', color: '#666' }}>No mechanics yet. Add one to get started.</p>
         ) : (
           mechanics.map((mechanic) => (
-            <MechanicCard key={mechanic.node_id}>
-              <MechanicHeader>
-                <MechanicName>{mechanic.properties.name}</MechanicName>
-                <MechanicActions>
-                  <Button kind="secondary" size={SIZE.compact}>View</Button>
-                  <Button kind="secondary" size={SIZE.compact}>Edit</Button>
-                </MechanicActions>
-              </MechanicHeader>
-              <div style={{ fontSize: '14px', color: '#666666', marginBottom: '8px' }}>
-                {mechanic.properties.email}
-              </div>
-              <div style={{ fontSize: '14px', color: '#666666', marginBottom: '8px' }}>
-                {mechanic.properties.phone}
-              </div>
-              <div style={{ display: 'flex', gap: '16px', fontSize: '12px', color: '#999999' }}>
-                <span>Certifications: {mechanic.properties.specialties.join(', ')}</span>
-              </div>
-            </MechanicCard>
+            <div key={mechanic.node_id}>
+              <MechanicCard>
+                <MechanicHeader>
+                  <MechanicName>{mechanic.properties.name}</MechanicName>
+                  <div style={{ display: 'flex', gap: '8px' }}>
+                    <Button kind="secondary" size="compact">View</Button>
+                    <Button kind="secondary" size="compact">Edit</Button>
+                  </div>
+                </MechanicHeader>
+                <div style={{ fontSize: '14px', color: '#666666', marginBottom: '8px' }}>
+                  {mechanic.properties.email}
+                </div>
+                <div style={{ fontSize: '14px', color: '#666666', marginBottom: '8px' }}>
+                  {mechanic.properties.phone}
+                </div>
+                <div style={{ display: 'flex', gap: '16px', fontSize: '12px', color: '#999999' }}>
+                  <span>Certifications: {mechanic.properties.specialties.join(', ')}</span>
+                </div>
+              </MechanicCard>
+            </div>
           ))
         )}
       </div>
