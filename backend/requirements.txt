@@ -5,6 +5,7 @@ redis==5.0.1
 pydantic==2.5.3
 pydantic-settings==2.1.0
 setuptools>=68.0.0
+email-validator>=2.0.0
 pytest==7.4.3
 pytest-cov==4.1.0
 pytest-asyncio==0.21.2

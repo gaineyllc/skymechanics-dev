@@ -36,6 +36,7 @@ from models import (
     ErrorResponse
 )
 from settings import settings
+from routes import onboarding as onboarding_router
 
 app = FastAPI(
     title="SkyMechanics Platform API",
@@ -545,6 +546,8 @@ async def delete_job(job_id: int):
 
 # ========== Root Endpoint ==========
 
+app.include_router(onboarding_router.router)
+
 @app.get("/")
 async def root():
     """Root endpoint with API information."""
@@ -559,6 +562,7 @@ async def root():
             "customers": "/customers",
             "jobs": "/jobs",
             "jobs_detail": "/jobs/{job_id}",
-            "mechanics": "/mechanics"
+            "mechanics": "/mechanics",
+            "onboarding": "/api/v1/onboard"
         }
     }
