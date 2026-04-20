@@ -428,13 +428,15 @@ CREATE TABLE mechanic_metrics (
 
 | Week | Phase | Deliverables |
 |------|-------|--------------|
-| 1-2 | Phase 1 | Auth/Job/Mechanic services, Redis caching |
-| 3-5 | Phase 2 | WebSocket streams, Kafka Lite, location tracking |
-| 6-7 | Phase 3 | ClickHouse setup, Superset dashboards |
-| 8-11 | Phase 4 | React Native MVP, testing |
-| 12+ | Phase 5 | Production deployment, monitoring |
+| 1-2 | Phase 0 | Foundation (vLLM, FastAPI, FalkorDB) |
+| 3-5 | Phase 0.5 | Service Breakout (Auth, Mechanics, Jobs) |
+| 6-7 | Phase 1 | Redis caching, monitoring stack |
+| 8-9 | Phase 2 | WebSocket streams, gateway service |
+| 10-11 | Phase 3 | Analytics & Reporting (ClickHouse, Superset) |
+| 12-15 | Phase 4 | Mobile App (React Native MVP) |
+| 16+ | Phase 5 | Production deployment, monitoring |
 
-**Total estimated**: 12-16 weeks for full platform
+**Total estimated**: 16-20 weeks for full platform
 
 ---
 
@@ -468,28 +470,28 @@ Which should I prioritize?
 
 ---
 
-## Summary: Phase 0.5 Completion (2026-04-20 22:00 EDT)
+## Summary: Phase 2 Completion (2026-04-20 22:30 EDT)
 
 **What we built**:
-- 3 microservices (auth, mechanics, jobs) with dedicated Dockerfiles
-- Shared models package for cross-service consistency
-- Redis cache deployment (K8s + Docker Compose)
-- Prometheus + Grafana observability stack
-- Alerting rules for service health, errors, memory/CPU
-- Updated Kubernetes manifests with proper images and ports
+- WebSocket Gateway service (port 8204) with real-time event broadcasting
+- Mechanic location updates via WebSocket
+- Job status notifications for clients
+- Global notifications channel for system alerts
+- Heartbeat health checks for all WebSocket connections
+- Updated all service requirements with `websockets==12.0`
 
 **What we documented**:
-- Updated `PLAN.md` with Phase 0.5 progress
-- Updated `DEVLOG.md` with detailed progress log
-- Added Redis and observability READMEs
+- Gateway service README with WebSocket endpoints
+- DEPLOYMENT.md updated with Phase 2 and gateway service
+- Mobile app WebSocket client example
 
 **Current status**:
-- All services deployed and running in k3d cluster
-- Redis cache available for caching and Pub/Sub
-- Metrics collection and visualization ready
-- Alerting configured for production readiness
+- All 5 backend services built and running (auth, mechanics, jobs, analytics, gateway)
+- WebSocket gateway serving real-time events
+- ClickHouse analytics service ready (Docker Compose)
+- React Native mobile app skeleton complete
 
 **Next phases**:
-- Phase 1: Real-Time & Event-Driven (WebSocket streams, Kafka Lite, location tracking)
-- Phase 2: Analytics & Reporting (ClickHouse, Superset dashboards)
-- Phase 3: Mobile App (React Native, push notifications)
+- Phase 3: Analytics & Reporting (ClickHouse setup, Superset dashboards)
+- Phase 4: Mobile App (React Native MVP testing, push notifications)
+- Phase 5: Production Scaling (Docker images pushed to GHCR, production deployment)
