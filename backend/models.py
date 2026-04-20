@@ -107,7 +107,7 @@ class JobCreateRequest(BaseModel):
     title: str
     description: Optional[str] = None
     status: str = "pending"
-    priority: str = "medium"
+    priority: int = 2  # 0=none, 1=low, 2=medium, 3=high, 4=critical
 
 
 class JobUpdateRequest(BaseModel):
@@ -115,7 +115,7 @@ class JobUpdateRequest(BaseModel):
     title: Optional[str] = None
     description: Optional[str] = None
     status: Optional[str] = None
-    priority: Optional[str] = None
+    priority: Optional[int] = None
     mechanic_id: Optional[int] = None
 
 

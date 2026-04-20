@@ -83,7 +83,7 @@ class TestJobCreateRequest:
         assert request.title == "Test Job"
         assert request.description is None
         assert request.status == "pending"  # default value
-        assert request.priority == 1  # default value
+        assert request.priority == 2  # default: medium (0=none,1=low,2=medium,3=high,4=critical)
 
 
 class TestMechanicCreateRequest:
