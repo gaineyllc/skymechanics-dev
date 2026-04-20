@@ -23,11 +23,11 @@ spec:
         image: ghcr.io/gaineyllc/jobs-service:latest
         imagePullPolicy: Always
         ports:
-        - containerPort: 8002
+        - containerPort: 8202
           name: http
         env:
         - name: PORT
-          value: "8002"
+          value: "8202"
         - name: FALKORDB_HOST
           value: "falkordb.skymechanics.svc.cluster.local"
         - name: FALKORDB_PORT
@@ -46,14 +46,14 @@ spec:
             cpu: "500m"
         livenessProbe:
           httpGet:
-            path: /health
-            port: 8002
+            path: /api/v1/health
+            port: 8202
           initialDelaySeconds: 10
           periodSeconds: 10
         readinessProbe:
           httpGet:
-            path: /ready
-            port: 8002
+            path: /api/v1/ready
+            port: 8202
           initialDelaySeconds: 5
           periodSeconds: 5
 ---
@@ -69,6 +69,6 @@ spec:
     app: jobs-service
   ports:
   - name: http
-    port: 8002
-    targetPort: 8002
+    port: 8202
+    targetPort: 8202
   type: ClusterIP

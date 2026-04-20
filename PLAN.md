@@ -1,5 +1,24 @@
 # SkyMechanics: Infrastructure & Development Plan
 
+## Port Policy (MANDATORY - Do Not Override)
+
+**All new services MUST use ports 8200+ to avoid conflicts with vLLM (port 8000)**.
+
+### Reserved Port Ranges
+| Range | Purpose | Current Use |
+|-------|---------|-------------|
+| 8000 | vLLM (LLM inference) | Qwen3-Coder-Next-FP8 |
+| 8200-8299 | Backend services | Auth (8200), Mechanics (8201), Jobs (8202) |
+| 3000-3099 | Frontend services | React (3003) |
+| 5432 | PostgreSQL | Auth service |
+| 6379 | FalkorDB/Redis | FalkorDB (primary), Redis (cache) |
+| 9090-9199 | Monitoring | Prometheus (9090), AlertManager (9093) |
+| 30000-32767 | Kubernetes NodePort | Not used |
+
+**Never use 8000-8199 for new services. If in doubt, use 8200+ and increment.**
+
+---
+
 ## Vision
 
 Scale from MVP to Uber-like platform while staying within free-tier constraints during development.
@@ -55,9 +74,9 @@ Scale from MVP to Uber-like platform while staying within free-tier constraints 
 ### Services Endpoints
 | Service | Port | Database |
 |---------|------|----------|
-| Auth Service | 8000 | PostgreSQL |
-| Mechanics Service | 8001 | FalkorDB |
-| Jobs Service | 8002 | FalkorDB |
+| Auth Service | 8200 | PostgreSQL |
+| Mechanics Service | 8201 | FalkorDB |
+| Jobs Service | 8202 | FalkorDB |
 
 ### Observability Access
 | Tool | Port | Access |

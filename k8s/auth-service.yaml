@@ -23,11 +23,11 @@ spec:
         image: ghcr.io/gaineyllc/auth-service:latest
         imagePullPolicy: Always
         ports:
-        - containerPort: 8000
+        - containerPort: 8200
           name: http
         env:
         - name: PORT
-          value: "8000"
+          value: "8200"
         - name: DATABASE_URL
           valueFrom:
             secretKeyRef:
@@ -47,14 +47,14 @@ spec:
             cpu: "500m"
         livenessProbe:
           httpGet:
-            path: /health
-            port: 8000
+            path: /api/v1/health
+            port: 8200
           initialDelaySeconds: 10
           periodSeconds: 10
         readinessProbe:
           httpGet:
-            path: /ready
-            port: 8000
+            path: /api/v1/ready
+            port: 8200
           initialDelaySeconds: 5
           periodSeconds: 5
 ---
@@ -70,6 +70,6 @@ spec:
     app: auth-service
   ports:
   - name: http
-    port: 8000
-    targetPort: 8000
+    port: 8200
+    targetPort: 8200
   type: ClusterIP

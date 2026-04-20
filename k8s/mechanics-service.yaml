@@ -23,11 +23,11 @@ spec:
         image: ghcr.io/gaineyllc/mechanics-service:latest
         imagePullPolicy: Always
         ports:
-        - containerPort: 8001
+        - containerPort: 8201
           name: http
         env:
         - name: PORT
-          value: "8001"
+          value: "8201"
         - name: FALKORDB_HOST
           value: "falkordb.skymechanics.svc.cluster.local"
         - name: FALKORDB_PORT
@@ -46,14 +46,14 @@ spec:
             cpu: "500m"
         livenessProbe:
           httpGet:
-            path: /health
-            port: 8001
+            path: /api/v1/health
+            port: 8201
           initialDelaySeconds: 10
           periodSeconds: 10
         readinessProbe:
           httpGet:
-            path: /ready
-            port: 8001
+            path: /api/v1/ready
+            port: 8201
           initialDelaySeconds: 5
           periodSeconds: 5
 ---
@@ -69,6 +69,6 @@ spec:
     app: mechanics-service
   ports:
   - name: http
-    port: 8001
-    targetPort: 8001
+    port: 8201
+    targetPort: 8201
   type: ClusterIP

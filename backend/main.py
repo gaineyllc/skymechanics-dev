@@ -88,5 +88,6 @@ app.include_router(events_router.router, prefix="/api/v1", tags=["events"])
 if __name__ == "__main__":
     import uvicorn
     import os
-    port = int(os.environ.get("PORT", 8000))
+    # PORT POLICY: Use 8200+ to avoid vLLM conflict on port 8000
+    port = int(os.environ.get("PORT", 8200))
     uvicorn.run("main:app", host="0.0.0.0", port=port, reload=True)
