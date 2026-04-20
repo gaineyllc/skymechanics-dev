@@ -12,7 +12,7 @@ Scale from MVP to Uber-like platform while staying within free-tier constraints 
 | Component | Tool | Free Tier | Notes |
 |-----------|------|-----------|-------|
 | API | FastAPI | ✅ | Python web framework |
-| DB | FalkorDB | ✅ | Graph database |
+| DB | FalkorDB | ✅ | Graph database (core data model) |
 | Auth | JWT | ✅ | Custom implementation |
 | Frontend | React | ✅ | Vite build |
 | Hosting | VPS | ✅ | Self-hosted |
@@ -22,6 +22,42 @@ Scale from MVP to Uber-like platform while staying within free-tier constraints 
 - [x] Onboarding flow with tenant creation
 - [x] Aircraft & Mechanic management
 - [x] Basic job workflow
+
+### FalkorDB Current Status
+**Running**: Self-hosted on GB10 workstation
+**Container**: `gb10-falkordb` (Docker)
+**Port**: 6379
+**Docker Compose**:
+```yaml
+version: '3.8'
+services:
+  falkordb:
+    image: falkordb/falkordb:latest
+    container_name: gb10-falkordb
+    ports:
+      - "6379:6379"
+    volumes:
+      - falkordb-data:/data
+    restart: unless-stopped
+volumes:
+  falkordb-data:
+```
+
+### How FalkorDB Scales
+| Approach | Current | Phase 1+ |
+|----------|---------|----------|
+| Data Model | Single graph per tenant | Graph per tenant (unchanged) |
+| Connection | Direct Python driver | Connection pooling + caching |
+| Scaling | Single instance | Read replicas (FalkorDB Enterprise) |
+| Backup | Manual snapshot | Automated backups |
+
+### Future FalkorDB Options
+| Option | Cost | Notes |
+|--------|------|-------|
+| Self-hosted | Free | Keep GB10 or upgrade hardware |
+| FalkorDB Cloud | Paid | Managed, auto-scaling |
+| Redis Graph | Free | Deprecated, not recommended |
+| Nebula Graph | Free | Alternative open-source graph DB |
 
 ---
 
@@ -85,7 +121,7 @@ backend/mechanics-service/
 └── requirements.txt
 ```
 
-**Database**: FalkorDB (keep existing)
+**Database**: FalkorDB (keep existing) - Graph database for mechanic relationships
 
 #### 3. Extract Jobs Service
 ```
@@ -101,6 +137,8 @@ backend/jobs-service/
 ```
 
 **Database**: FalkorDB + PostgreSQL (for billing records)
+- Graph DB: Job ↔ Mechanic ↔ Aircraft relationships
+- PostgreSQL: Billing records, invoices, payments
 
 #### 4. Add Redis Caching Layer
 ```
@@ -321,12 +359,23 @@ CREATE TABLE mechanic_metrics (
 | Area | Free/Dev Option | Production Option |
 |------|-----------------|-------------------|
 | Hosting | VPS (DigitalOcean) | Kubernetes (EKS/GKE) |
-| Database | Self-hosted FalkorDB | FalkorDB cloud |
+| **Graph DB** | **Self-hosted FalkorDB** | **FalkorDB cloud** |
 | Auth | Custom JWT | Auth0 + custom providers |
 | CI/CD | GitHub Actions | GitHub Actions (same) |
 | Monitoring | Prometheus + Grafana | Datadog / New Relic |
 | Logging | Loki | CloudWatch / Papertrail |
 | CDN | None | Cloudflare / Bunny.net |
+
+### FalkorDB in Production
+
+| Scenario | Current Setup | Scalable Setup |
+|----------|---------------|----------------|
+| Single tenant | 1 graph | 1 graph |
+| 10 tenants | 10 graphs | 10 graphs (same) |
+| 1000 tenants | 1000 graphs | Connection pooling |
+| High traffic | Single instance | Read replicas |
+
+**Note**: FalkorDB's graph-per-tenant architecture scales well - each graph is isolated and can be queried independently. The main bottleneck is memory, not the number of graphs.
 
 ### Cost Optimization Strategies
 
@@ -367,10 +416,11 @@ CREATE TABLE mechanic_metrics (
 
 | Risk | Impact | Mitigation |
 |------|--------|------------|
-| FalkorDB scaling | Medium | Test cluster size, add read replicas |
+| FalkorDB scaling | Medium | Add connection pooling, monitor memory usage, consider FalkorDB cloud for read replicas |
 | Real-time latency | High | Use Redis Pub/Sub, optimize WebSocket |
 | Mobile app complexity | High | Use Expo for faster development |
 | Cost overruns | Medium | Start with Supabase free tier |
+| Multi-tenant complexity | Low | Current graph-per-tenant architecture is clean and isolated |
 
 ---
 
