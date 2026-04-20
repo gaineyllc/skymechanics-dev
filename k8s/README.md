@@ -3,11 +3,13 @@
 ## Quick Start
 
 ```bash
-# Setup local environment with memory monitoring
+# Make scripts executable
 chmod +x k8s/*.sh
-./k8s/setup-local.sh
 
-# Setup K3d cluster
+# Setup local environment with memory monitoring
+sudo ./k8s/setup-local.sh
+
+# Setup K3d cluster (requires sudo)
 cd k8s
 ./setup-k3d.sh
 
@@ -15,11 +17,11 @@ cd k8s
 ./deploy-all.sh
 
 # Monitor resources
-./monitor-resources.sh check
-./monitor-resources.sh monitor
+./k8s/monitor-resources.sh check
+./k8s/monitor-resources.sh monitor
 ```
 
-**Note**: Requires sudo for k3d/kubectl/helm installation. See `k8s/MANUAL-SETUP.md` for details.
+**Note**: k3d/kubectl/helm installation requires sudo. See `k8s/MANUAL-SETUP.md` for details.
 
 ## Architecture
 

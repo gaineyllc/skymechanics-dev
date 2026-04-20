@@ -22,15 +22,15 @@ check_memory() {
         echo "⚠️  HIGH MEMORY PRESSURE DETECTED!"
         echo "Protecting host system..."
         
-        # Send alert (Telegram notification)
+        # Log to file
+        echo "$(date): Memory pressure at ${mem_percent}%" >> /var/log/skymechanics-resource-alerts.log
+        
+        # Send alert via OpenClaw
         if command -v openclaw &> /dev/null; then
             openclaw telegram sendMessage \
                 --chat-id 5824139677 \
-                --text "⚠️ MEMORY PRESSURE ALERT: ${mem_percent}% used on ${HOSTNAME}"
+                --text "⚠️ MEMORY PRESSURE ALERT: ${mem_percent}% used on $(hostname)" 2>/dev/null || true
         fi
-        
-        # Log to file
-        echo "$(date): Memory pressure at ${mem_percent}%" >> /var/log/skymechanics-resource-alerts.log
         
         return 1
     fi
@@ -41,19 +41,7 @@ check_memory() {
 # Get container resource usage
 get_container_stats() {
     echo "=== Current Container Resource Usage ==="
-    docker stats --no-stream --format "table {{.Name}}\t{{.CPUPerc}}\t{{.MemUsage}}\t{{.MemPerc}}"
-}
-
-# Check FalkorDB memory (critical service)
-check_falkordb_memory() {
-    local falkordb_mem=$(docker stats --no-stream --format "{{.MemPerc}}" gb10-falkordb 2>/dev/null | tr -d '%')
-    
-    if [ -n "$falkordb_mem" ]; then
-        echo "FalkorDB Memory: ${falkordb_mem}%"
-        if [ "$falkordb_mem" -gt 30 ]; then
-            echo "⚠️ FalkorDB memory usage is high (>30%)"
-        fi
-    fi
+    docker stats --no-stream --format "table {{.Name}}\t{{.CPUPerc}}\t{{.MemUsage}}\t{{.MemPerc}}" 2>/dev/null || echo "Docker not available or containers not running"
 }
 
 # Get K8s pod resource usage
@@ -94,7 +82,7 @@ one_time_check() {
 
 # Alert script for system monitoring
 generate_alert_script() {
-    cat << 'EOF' > /usr/local/bin/skymemalert
+    cat << 'EOF' > /tmp/skymemalert
 #!/bin/bash
 # Auto-generated memory alert script
 
@@ -115,15 +103,15 @@ while true; do
         if command -v openclaw &> /dev/null; then
             openclaw telegram sendMessage \
                 --chat-id 5824139677 \
-                --text "⚠️ MEMORY CRITICAL: ${mem_percent}% on ${HOSTNAME}" 2>/dev/null || true
+                --text "⚠️ MEMORY CRITICAL: ${mem_percent}% on $(hostname)" 2>/dev/null || true
         fi
     fi
     
     sleep 10
 done
 EOF
-    chmod +x /usr/local/bin/skymemalert
-    echo "Alert script created at /usr/local/bin/skymemalert"
+    chmod +x /tmp/skymemalert
+    echo "Alert script created at /tmp/skymemalert"
 }
 
 # Parse arguments

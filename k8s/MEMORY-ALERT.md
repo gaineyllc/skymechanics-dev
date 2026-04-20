@@ -5,12 +5,13 @@
 ## Installation
 
 ```bash
+chmod +x k8s/setup-local.sh
 sudo ./k8s/setup-local.sh
 ```
 
 This installs:
-- `/usr/local/bin/skymem` - Main monitoring script
 - `/etc/systemd/system/skymemalert.service` - Systemd service
+- Memory monitoring via `/home/gaineyllc/.openclaw/workspace/skymechanics-dev/k8s/monitor-resources.sh`
 - Automatic startup on boot
 
 ## Usage
@@ -18,15 +19,11 @@ This installs:
 ### One-time Check
 ```bash
 ./k8s/monitor-resources.sh check
-# or
-skymem check
 ```
 
 ### Continuous Monitoring
 ```bash
 ./k8s/monitor-resources.sh monitor
-# or
-skymem monitor
 ```
 
 ### Start as Service
@@ -73,6 +70,7 @@ MEMORY_THRESHOLD=85  # Change this value
 - It's designed to **notify you** so you can take action
 - For Kubernetes, the memory limits ensure containers can't exceed their allocation
 - Your host has 121 GiB RAM - the cluster uses max ~3.5 GiB
+- Logs are written to `/var/log/skymechanics-resource-alerts.log`
 
 ## Systemd Service
 
@@ -83,7 +81,7 @@ After=network.target
 
 [Service]
 Type=simple
-ExecStart=/usr/local/bin/skymem monitor
+ExecStart=/home/gaineyllc/.openclaw/workspace/skymechanics-dev/k8s/monitor-resources.sh monitor
 Restart=on-failure
 RestartSec=5
 
@@ -101,9 +99,6 @@ sudo systemctl disable skymemalert
 # Remove service file
 sudo rm /etc/systemd/system/skymemalert.service
 sudo systemctl daemon-reload
-
-# Remove binary
-sudo rm /usr/local/bin/skymem
 ```
 
 ## Manual Alternative (no sudo)
@@ -111,33 +106,15 @@ sudo rm /usr/local/bin/skymem
 ```bash
 # Start monitoring in background
 ./k8s/monitor-resources.sh monitor &
-
-# Or create custom systemd service
-sudo tee /etc/systemd/system/skymemalert.service > /dev/null << EOF
-[Unit]
-Description=SkyMechanics Memory Alert Service
-After=network.target
-
-[Service]
-Type=simple
-ExecStart=/home/gaineyllc/.openclaw/workspace/skymechanics-dev/k8s/monitor-resources.sh monitor
-Restart=on-failure
-RestartSec=5
-
-[Install]
-WantedBy=multi-user.target
-EOF
-
-sudo systemctl daemon-reload
-sudo systemctl enable skymemalert
-sudo systemctl start skymemalert
 ```
 
 ## Manual Alternative Uninstall
 
+To remove manual installation:
+
 ```bash
 # Kill background process
-pkill -f 'skymem monitor'
+pkill -f 'monitor-resources.sh monitor'
 
 # Remove custom service
 sudo rm /etc/systemd/system/skymemalert.service
