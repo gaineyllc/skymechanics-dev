@@ -20,8 +20,8 @@ spec:
       serviceAccountName: skymechanics-sa
       containers:
       - name: jobs-service
-        image: skymechanics-backend:dev
-        imagePullPolicy: Never
+        image: ghcr.io/gaineyllc/jobs-service:latest
+        imagePullPolicy: Always
         ports:
         - containerPort: 8002
           name: http
@@ -37,15 +37,6 @@ spec:
             secretKeyRef:
               name: skymechanics-secrets
               key: FALKORDB_PASSWORD
-        - name: POSTGRES_HOST
-          value: "postgres.skymechanics.svc.cluster.local"
-        - name: POSTGRES_PORT
-          value: "5432"
-        - name: POSTGRES_PASSWORD
-          valueFrom:
-            secretKeyRef:
-              name: skymechanics-secrets
-              key: POSTGRES_PASSWORD
         resources:
           requests:
             memory: "256Mi"

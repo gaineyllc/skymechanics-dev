@@ -20,27 +20,19 @@ spec:
       serviceAccountName: skymechanics-sa
       containers:
       - name: auth-service
-        image: skymechanics-backend:dev
-        imagePullPolicy: Never
+        image: ghcr.io/gaineyllc/auth-service:latest
+        imagePullPolicy: Always
         ports:
         - containerPort: 8000
           name: http
         env:
         - name: PORT
           value: "8000"
-        - name: DB_HOST
-          value: "postgres.skymechanics.svc.cluster.local"
-        - name: DB_PORT
-          value: "5432"
-        - name: DB_NAME
-          value: "skymechanics"
-        - name: DB_USER
-          value: "postgres"
-        - name: DB_PASSWORD
+        - name: DATABASE_URL
           valueFrom:
             secretKeyRef:
               name: skymechanics-secrets
-              key: POSTGRES_PASSWORD
+              key: DATABASE_URL
         - name: JWT_SECRET
           valueFrom:
             secretKeyRef:
