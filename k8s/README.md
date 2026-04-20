@@ -19,6 +19,8 @@ cd k8s
 ./monitor-resources.sh monitor
 ```
 
+**Note**: Requires sudo for k3d/kubectl/helm installation. See `k8s/MANUAL-SETUP.md` for details.
+
 ## Architecture
 
 ```

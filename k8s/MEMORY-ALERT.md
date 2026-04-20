@@ -1,25 +1,6 @@
 # Memory Threshold Alert Script
 
-This script monitors system memory and protects your host from being overwhelmed by the Kubernetes cluster.
-
-## Configuration
-
-```bash
-THRESHOLD=85    # Alert when memory usage exceeds 85%
-CHECK_INTERVAL=10  # Check every 10 seconds
-```
-
-## How It Works
-
-1. **Monitors `/proc/meminfo`** for available memory
-2. **Calculates usage percentage**:
-   ```
-   mem_used = mem_total - mem_available
-   mem_percent = (mem_used * 100) / mem_total
-   ```
-3. **Triggers alert** if `mem_percent > THRESHOLD`
-4. **Sends Telegram notification** to your channel
-5. **Logs to system log** for auditing
+**WARNING**: This script requires sudo to install as a systemd service.
 
 ## Installation
 
@@ -64,16 +45,8 @@ sudo systemctl disable skymemalert
 
 When memory exceeds threshold:
 
-1. **Log message** to system log:
-   ```
-   Apr 20 10:30:00 promaxgb10 skymemalert: Memory pressure at 87%
-   ```
-
-2. **Send Telegram notification**:
-   ```
-   ⚠️ MEMORY PRESSURE ALERT: 87% on promaxgb10
-   ```
-
+1. **Log message** to system log
+2. **Send Telegram notification** (if OpenClaw configured)
 3. **Continue monitoring** - doesn't kill processes automatically
 
 ## Memory Targets
@@ -116,4 +89,57 @@ RestartSec=5
 
 [Install]
 WantedBy=multi-user.target
+```
+
+## Uninstall
+
+```bash
+# Stop service
+sudo systemctl stop skymemalert
+sudo systemctl disable skymemalert
+
+# Remove service file
+sudo rm /etc/systemd/system/skymemalert.service
+sudo systemctl daemon-reload
+
+# Remove binary
+sudo rm /usr/local/bin/skymem
+```
+
+## Manual Alternative (no sudo)
+
+```bash
+# Start monitoring in background
+./k8s/monitor-resources.sh monitor &
+
+# Or create custom systemd service
+sudo tee /etc/systemd/system/skymemalert.service > /dev/null << EOF
+[Unit]
+Description=SkyMechanics Memory Alert Service
+After=network.target
+
+[Service]
+Type=simple
+ExecStart=/home/gaineyllc/.openclaw/workspace/skymechanics-dev/k8s/monitor-resources.sh monitor
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+sudo systemctl daemon-reload
+sudo systemctl enable skymemalert
+sudo systemctl start skymemalert
+```
+
+## Manual Alternative Uninstall
+
+```bash
+# Kill background process
+pkill -f 'skymem monitor'
+
+# Remove custom service
+sudo rm /etc/systemd/system/skymemalert.service
+sudo systemctl daemon-reload
 ```
