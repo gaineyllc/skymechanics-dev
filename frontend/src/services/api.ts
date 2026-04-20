@@ -79,6 +79,21 @@ export const createJob = async (data: Partial<Job['properties']>): Promise<Job> 
   return response.data
 }
 
+export const updateJobStatus = async (id: number, status: string, newStatus: string, comment?: string): Promise<Job> => {
+  const response = await api.post(`/jobs/${id}/status`, { status, new_status: newStatus, comment })
+  return response.data
+}
+
+export const getJobWorkflow = async (id: number): Promise<any> => {
+  const response = await api.get(`/jobs/${id}/workflow`)
+  return response.data
+}
+
+export const getCompleteWorkflow = async (): Promise<any> => {
+  const response = await api.get('/jobs/workflow/complete')
+  return response.data
+}
+
 // Mechanics
 export const fetchMechanics = async (): Promise<Mechanic[]> => {
   const response = await api.get('/mechanics')

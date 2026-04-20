@@ -9,9 +9,9 @@ import { Layout } from './components/Layout'
 import { Dashboard } from './pages/Dashboard'
 import { Jobs } from './pages/Jobs'
 import { JobDetail } from './pages/JobDetail'
+import { WorkflowBuilder } from './components/WorkflowBuilder'
 import { Customers } from './pages/Customers'
 import { Mechanics } from './pages/Mechanics'
-import { Admin } from './pages/Admin'
 import Onboarding from './pages/Onboarding'
 import OnboardingSuccess from './pages/OnboardingSuccess'
 import QuickStartWizard from './components/QuickStartWizard'
@@ -32,7 +32,10 @@ export default function App() {
                 <Route path="/dashboard" element={<Dashboard />} />
                 <Route path="/jobs" element={<Jobs />} />
                 <Route path="/jobs/:id" element={<JobDetail />} />
+                <Route path="/workflow" element={<WorkflowBuilder readOnly={true} />} />
+                <Route path="/workflow/edit" element={<WorkflowBuilder readOnly={false} />} />
                 <Route path="/customers" element={<Customers />} />
+                <Route path="/mechanics" element={<Mechanics />} />
                 <Route path="/mechanics" element={<Mechanics />} />
                 <Route path="/admin" element={<Admin />} />
               </Routes>

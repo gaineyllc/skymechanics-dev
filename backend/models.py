@@ -89,7 +89,23 @@ class JobCreateRequest(BaseModel):
     title: str
     description: Optional[str] = None
     status: str = "pending"
-    priority: int = 1
+    priority: str = "medium"
+
+
+class JobUpdateRequest(BaseModel):
+    """Request to update job properties."""
+    title: Optional[str] = None
+    description: Optional[str] = None
+    status: Optional[str] = None
+    priority: Optional[str] = None
+    mechanic_id: Optional[int] = None
+
+
+class JobStatusRequest(BaseModel):
+    """Request to update job status."""
+    status: str = Field(..., description="Current job status")
+    new_status: str = Field(..., description="New job status")
+    comment: Optional[str] = None
 
 
 class MechanicCreateRequest(BaseModel):
@@ -98,6 +114,38 @@ class MechanicCreateRequest(BaseModel):
     email: str
     phone: Optional[str] = None
     specialties: List[str] = Field(default_factory=list)
+
+
+# ========== Onboarding / User Role Models ==========
+
+class UserCreateRequest(BaseModel):
+    """Request to create a new user with role."""
+    email: str
+    first_name: str
+    last_name: str
+    phone: Optional[str] = None
+    role: str = Field(..., description="Role: 'owner', 'admin', 'mechanic'")
+    password: str = Field(..., description="User password")
+
+
+class OwnerProfileRequest(BaseModel):
+    """Request to create/update owner profile."""
+    vehicle_ids: List[int] = Field(default_factory=list, description="List of vehicle/node IDs")
+    preferences: Dict[str, Any] = Field(default_factory=dict, description="Owner preferences")
+
+
+class AdminProfileRequest(BaseModel):
+    """Request to create/update admin profile."""
+    permissions: List[str] = Field(default_factory=list, description="Admin permissions")
+    settings: Dict[str, Any] = Field(default_factory=dict, description="Admin settings")
+
+
+class MechanicProfileRequest(BaseModel):
+    """Request to create/update mechanic profile."""
+    license_number: Optional[str] = None
+    certifications: List[str] = Field(default_factory=list)
+    availability: Dict[str, Any] = Field(default_factory=dict, description="Working hours, days, etc.")
+    current_location: Optional[Dict[str, float]] = Field(None, description="GPS coordinates {lat, lng}")
 
 
 # ========== Response Wrappers ==========
@@ -112,5 +160,4 @@ class ErrorResponse(BaseModel):
     """Standard error response."""
     success: bool = False
     error: str
-    details: Optional[str] = None
     details: Optional[str] = None

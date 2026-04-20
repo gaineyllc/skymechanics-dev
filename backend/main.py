@@ -22,6 +22,9 @@ from models import (
 )
 from settings import settings
 from routes import onboarding as onboarding_router
+from routes import users as users_router
+from routes import jobs as jobs_router
+from routes import users as users_router
 
 # Configure structlog
 structlog.configure(
@@ -554,6 +557,8 @@ async def delete_job(job_id: int):
 # ========== Root Endpoint ==========
 
 app.include_router(onboarding_router.router)
+app.include_router(users_router.router)
+app.include_router(jobs_router.router)
 
 @app.get("/")
 async def root():
