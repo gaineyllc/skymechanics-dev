@@ -2,6 +2,7 @@
 FastAPI application for SkyMechanics Platform.
 Provides REST API endpoints for graph database operations.
 """
+import structlog
 from fastapi import FastAPI, HTTPException, Depends
 from fastapi.responses import JSONResponse
 from pydantic import ValidationError
@@ -19,24 +20,30 @@ from models import (
     SuccessResponse,
     ErrorResponse
 )
-from pydantic_settings import BaseSettings
-from typing import Optional
-
-from db import db_client
-from models import (
-    GraphQueryRequest,
-    MultiTenantCreateRequest,
-    MultiTenantQueryRequest,
-    EntityCreateRequest,
-    RelationshipCreateRequest,
-    CustomerCreateRequest,
-    JobCreateRequest,
-    MechanicCreateRequest,
-    SuccessResponse,
-    ErrorResponse
-)
 from settings import settings
 from routes import onboarding as onboarding_router
+
+# Configure structlog
+structlog.configure(
+    processors=[
+        structlog.contextvars.merge_contextvars,
+        structlog.stdlib.filter_by_level,
+        structlog.stdlib.add_logger_name,
+        structlog.stdlib.add_log_level,
+        structlog.stdlib.PositionalArgumentsFormatter(),
+        structlog.processors.TimeStamper(fmt="iso"),
+        structlog.processors.StackInfoRenderer(),
+        structlog.processors.format_exc_info,
+        structlog.processors.UnicodeDecoder(),
+        structlog.stdlib.ProcessorFormatter.wrap_for_formatter,
+    ],
+    wrapper_class=structlog.stdlib.BoundLogger,
+    context_class=dict,
+    logger_factory=structlog.stdlib.LoggerFactory(),
+    cache_logger_on_first_use=True,
+)
+
+logger = structlog.get_logger(__name__)
 
 app = FastAPI(
     title="SkyMechanics Platform API",
