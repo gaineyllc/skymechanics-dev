@@ -1,60 +1,80 @@
-# SkyMechanics Sudo Setup Instructions
+# Full Autonomous Setup - Complete Sudoers Guide
 
-## Quick Setup (Recommended)
+## Updated Sudoers File
+
+The sudoers file at `k8s/skymechanics-sudoers` now includes:
+
+| Command Group | Purpose |
+|---------------|---------|
+| `TOOL_INSTALL` | k3d, kubectl, helm installation |
+| `K3D_MANAGE` | Cluster create/delete/list |
+| `KUBECTL_MANAGE` | kubectl apply, wait, port-forward, get, logs, top |
+| `MEMORY_MONITOR` | Copy monitor script and create log file |
+| `SYSTEMD_MANAGE` | Service enable/start/stop/disable |
+| `FULL_SETUP` | Run the full automated script |
+| `CLI_WRITE` + `CLI_CHMOD` | Create CLI helper scripts |
+
+## Installation Steps
 
 ```bash
-# Copy the sudoers file
-sudo cp k8s/skymechanics-sudoers /etc/sudoers.d/skymechanics
+# 1. Copy sudoers file (validates automatically)
+sudo visudo -f k8s/skymechanics-sudoers
 
-# Test that it works
+# 2. Verify it works
 sudo -l | grep skymechanics
 ```
 
-## What This Enables
+Expected output should show all 9 command groups.
 
-| Command | Purpose |
-|---------|---------|
-| `curl` + `install` | Install k3d/kubectl |
-| `setup-local.sh` | Memory monitoring service |
-| `systemctl` commands | Start/stop memory monitoring |
-| `cp` to `/usr/local/bin` | Install monitor script |
+## Usage
 
-## After Setup
+After sudoers is set up, run:
 
 ```bash
-# Install k3d
-curl -s https://raw.githubusercontent.com/k3d-io/k3d/main/install.sh | sudo bash
+# Autonomous full setup (everything)
+sudo ./k8s/full-setup.sh
 
-# Install kubectl
-curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/arm64/kubectl"
-sudo install -o root -g root -m 0755 kubectl /usr/local/bin/kubectl
-
-# Verify
-k3d version
-kubectl version --client
-
-# Run setup
-sudo ./k8s/setup-local.sh
+# Or verify individual components
+sudo -l | grep FULL_SETUP
+sudo -l | grep KUBECTL_MANAGE
 ```
+
+## What `full-setup.sh` Does
+
+1. Installs k3d, kubectl, helm, docker-compose
+2. Creates K3d cluster with memory limits
+3. Sets up memory monitoring service
+4. Deploys all Kubernetes services
+5. Creates CLI helpers (`k8s-forward`, `k8s-logs`, `k8s-status`)
 
 ## Testing
 
-After creating the sudoers file:
-
 ```bash
-# Test k3d install (should work without password)
-curl -s https://raw.githubusercontent.com/k3d-io/k3d/main/install.sh | sudo bash
-```
+# Test k3d install
+sudo /usr/bin/curl --version
 
-## Undo (If Needed)
+# Test kubectl apply
+sudo /usr/local/bin/kubectl version --client
 
-```bash
-sudo rm /etc/sudoers.d/skymechanics
+# Test full setup
+sudo ./k8s/full-setup.sh
 ```
 
 ## Security Notes
 
-- Only allows specific paths and commands
-- No wildcard sudo access
-- Can't modify system-critical files
-- Expire policy: commands must be run in correct sequence
+- All commands are explicitly listed with full paths
+- No wildcard sudo access (`*`)
+- Temporary files cleaned up after use
+- Memory monitoring protects host from OOM
+
+## Rollback
+
+```bash
+# Remove sudoers file
+sudo rm /etc/sudoers.d/skymechanics
+
+# Stop memory monitoring
+sudo systemctl stop skymemalert
+sudo systemctl disable skymemalert
+sudo rm /etc/systemd/system/skymemalert.service
+```

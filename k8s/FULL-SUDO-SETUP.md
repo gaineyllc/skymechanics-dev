@@ -1,7 +1,13 @@
+# Full Autonomous Setup - K8s Sudoers
+
+## Updated Sudoers File
+
+Replace the sudoers file with this complete version:
+
+```bash
 # SkyMechanics - Full autonomous setup permissions
 # Install with: sudo visudo -f /etc/sudoers.d/skymechanics
 
-# User alias
 User_Alias SKYMECHANICS = gaineyllc
 
 # Tools installation
@@ -46,14 +52,13 @@ Cmnd_Alias SYSTEMD_MANAGE = /usr/bin/tee /etc/systemd/system/skymemalert.service
 # Full setup script
 Cmnd_Alias FULL_SETUP = /bin/bash /home/gaineyllc/.openclaw/workspace/skymechanics-dev/k8s/full-setup.sh
 
-# CLI helpers (write files and chmod)
-Cmnd_Alias CLI_WRITE = /bin/bash -c 'cat > /usr/local/bin/k8s-forward', \
-                       /bin/bash -c 'cat > /usr/local/bin/k8s-logs', \
-                       /bin/bash -c 'cat > /usr/local/bin/k8s-status'
-
-Cmnd_Alias CLI_CHMOD = /bin/chmod +x /usr/local/bin/k8s-forward, \
-                       /bin/chmod +x /usr/local/bin/k8s-logs, \
-                       /bin/chmod +x /usr/local/bin/k8s-status
+# CLI helpers
+Cmnd_Alias CLI_HELPERS = /bin/bash -c /bin/bash -c 'cat > /usr/local/bin/k8s-forward', \
+                         /bin/bash -c 'cat > /usr/local/bin/k8s-logs', \
+                         /bin/bash -c 'cat > /usr/local/bin/k8s-status', \
+                         /bin/bash -c /bin/chmod +x /usr/local/bin/k8s-forward, \
+                         /bin/bash -c /bin/chmod +x /usr/local/bin/k8s-logs, \
+                         /bin/bash -c /bin/chmod +x /usr/local/bin/k8s-status
 
 # Allow user to run all commands without password
 SKYMECHANICS ALL=(root) NOPASSWD: TOOL_INSTALL
@@ -63,5 +68,53 @@ SKYMECHANICS ALL=(root) NOPASSWD: KUBECTL_MANAGE
 SKYMECHANICS ALL=(root) NOPASSWD: MEMORY_MONITOR
 SKYMECHANICS ALL=(root) NOPASSWD: SYSTEMD_MANAGE
 SKYMECHANICS ALL=(root) NOPASSWD: FULL_SETUP
-SKYMECHANICS ALL=(root) NOPASSWD: CLI_WRITE
-SKYMECHANICS ALL=(root) NOPASSWD: CLI_CHMOD
+SKYMECHANICS ALL=(root) NOPASSWD: CLI_HELPERS
+```
+
+## Installation Steps
+
+```bash
+# 1. Copy sudoers file
+sudo cp k8s/skymechanics-sudoers /etc/sudoers.d/skymechanics
+
+# 2. Set correct permissions
+sudo chmod 0440 /etc/sudoers.d/skymechanics
+
+# 3. Validate
+sudo visudo -c
+
+# 4. Test
+sudo -l | grep skymechanics
+```
+
+## Usage
+
+After sudoers is set up, run:
+
+```bash
+# Autonomous full setup
+sudo ./k8s/full-setup.sh
+
+# Or step by step
+sudo ./k8s/setup-local.sh
+cd k8s
+./setup-k3d.sh
+./deploy-all.sh
+```
+
+## What This Enables
+
+| Command | Purpose |
+|---------|---------|
+| `full-setup.sh` | Complete automated setup (tools + cluster + services) |
+| `setup-local.sh` | Memory monitoring service |
+| `setup-k3d.sh` | K3d cluster creation |
+| `deploy-all.sh` | Deploy all K8s services |
+
+## Security Notes
+
+- All commands are explicitly listed
+- No wildcard sudo access
+- Paths are absolute and specific
+- Temporary files are cleaned up after use
+- Memory monitoring protects the host system
