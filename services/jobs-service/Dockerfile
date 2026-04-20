@@ -17,17 +17,17 @@ COPY services/jobs-service/requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy application code
-COPY services/jobs-service/ .
+COPY services/jobs-service/*.py .
 
 # Create non-root user for security
 RUN useradd -m -u 1000 appuser && chown -R appuser:appuser /app
 USER appuser
 
 # Expose port
-EXPOSE 8002
+EXPOSE 8202
 
 # Environment variables
-ENV PORT=8002
+ENV PORT=8202
 ENV PYTHONUNBUFFERED=1
 ENV FALKORDB_HOST=falkordb
 ENV FALKORDB_PORT=6379
