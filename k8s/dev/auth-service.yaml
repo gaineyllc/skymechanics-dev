@@ -16,21 +16,31 @@ spec:
     spec:
       containers:
       - name: auth-service
-        image: ghcr.io/gaineyllc/auth-service:latest
-        imagePullPolicy: Never
+        image: skymechanics/auth-service:dev
+        imagePullPolicy: IfNotPresent
         ports:
         - containerPort: 8200
         env:
         - name: PORT
           value: "8200"
         - name: FALKORDB_HOST
-          value: "skymechanics-falkordb"
+          value: "falkordb"
         - name: FALKORDB_PORT
           value: "6379"
+        - name: FALKORDB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: skymechanics-secrets
+              key: FALKORDB_PASSWORD
         - name: POSTGRES_HOST
           value: "skymechanics-postgres"
         - name: POSTGRES_PORT
           value: "5432"
+        - name: POSTGRES_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: skymechanics-secrets
+              key: POSTGRES_PASSWORD
         resources:
           requests:
             memory: "128Mi"
