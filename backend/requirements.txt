@@ -1,10 +1,9 @@
 fastapi==0.109.0
 uvicorn==0.27.0
-falkordb==1.0.5
-redis==5.0.1
+falkordb>=1.0.5
+structlog>=24.0.0
 pydantic==2.5.3
 pydantic-settings==2.1.0
-setuptools>=68.0.0
 email-validator>=2.0.0
 pytest==7.4.3
 pytest-cov==4.1.0

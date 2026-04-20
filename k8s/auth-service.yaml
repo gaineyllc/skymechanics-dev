@@ -20,12 +20,14 @@ spec:
       serviceAccountName: skymechanics-sa
       containers:
       - name: auth-service
-        image: ghcr.io/gaineyllc/auth-service:latest
-        imagePullPolicy: IfNotPresent
+        image: skymechanics-backend:dev
+        imagePullPolicy: Never
         ports:
         - containerPort: 8000
           name: http
         env:
+        - name: PORT
+          value: "8000"
         - name: DB_HOST
           value: "postgres.skymechanics.svc.cluster.local"
         - name: DB_PORT

@@ -19,9 +19,16 @@ spec:
         memory-optimized: "true"
     spec:
       serviceAccountName: skymechanics-sa
+      initContainers:
+      - name: falkordb-module-preload
+        image: falkordb/falkordb-server:latest
+        command: ['cp', '/var/lib/falkordb/bin/falkordb.so', '/module/falkordb.so']
+        volumeMounts:
+        - name: module
+          mountPath: /module
       containers:
       - name: falkordb
-        image: falkordb/falkordb-server:latest
+        image: bitnami/redis:latest
         imagePullPolicy: IfNotPresent
         ports:
         - containerPort: 6379
@@ -31,7 +38,7 @@ spec:
         command: ["redis-server"]
         args:
         - "--loadmodule"
-        - "/var/lib/falkordb/bin/falkordb.so"
+        - "/module/falkordb.so"
         - "--requirepass"
         - "$(FALKORDB_PASSWORD)"
         - "--maxmemory"
@@ -75,7 +82,7 @@ spec:
         - name: data
           mountPath: /data
         - name: module
-          mountPath: /var/lib/falkordb/bin
+          mountPath: /module
       volumes:
       - name: module
         emptyDir: {}

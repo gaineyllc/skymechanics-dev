@@ -22,9 +22,17 @@ COPY main.py .
 COPY db.py .
 COPY models.py .
 COPY settings.py .
+COPY onboarding.py .
+COPY routes/ ./routes/
+
+# Create __init__.py if not present
+RUN touch routes/__init__.py 2>/dev/null || true
 
 # Expose port
 EXPOSE 8000
 
+# Default port (can be overridden via PORT env var)
+ENV PORT=8000
+
 # Run application
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
+CMD ["sh", "-c", "uvicorn main:app --host 0.0.0.0 --port ${PORT} --reload"]

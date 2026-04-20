@@ -20,12 +20,14 @@ spec:
       serviceAccountName: skymechanics-sa
       containers:
       - name: mechanics-service
-        image: ghcr.io/gaineyllc/mechanics-service:latest
-        imagePullPolicy: IfNotPresent
+        image: skymechanics-backend:dev
+        imagePullPolicy: Never
         ports:
         - containerPort: 8001
           name: http
         env:
+        - name: PORT
+          value: "8001"
         - name: FALKORDB_HOST
           value: "falkordb.skymechanics.svc.cluster.local"
         - name: FALKORDB_PORT

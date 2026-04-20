@@ -1,10 +1,4 @@
-"""
-Onboarding routes for SkyMechanics Platform.
-"""
-from fastapi import APIRouter, HTTPException, Depends
-from pydantic import ValidationError
-from typing import Optional
-
+# Routes package
 from onboarding import (
     full_onboarding,
     complete_onboarding,
@@ -14,6 +8,10 @@ from onboarding import (
     OnboardResponse,
     OnboardStatusResponse
 )
+
+from fastapi import APIRouter, HTTPException, Depends
+from pydantic import ValidationError
+from typing import Optional
 
 router = APIRouter(
     prefix="/api/v1/onboard",
@@ -33,57 +31,77 @@ async def onboard(request: OnboardRequest):
     4. Returns authentication token and tenant info
     """
     try:
-        result = full_onboarding(request)
-        return result
+        result = full_onboarding(
+            email=request.email,
+            password=request.password,
+            company_name=request.company_name,
+            full_name=request.full_name
+        )
+        return OnboardResponse(**result)
     except ValidationError as e:
-        raise HTTPException(status_code=400, detail=str(e.errors()))
+        raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Onboarding failed: {str(e)}")
 
 
-@router.post("/bulk")
-async def onboard_bulk(
-    graph_name: str,
-    request: BulkImportRequest,
-    token: Optional[str] = None
-):
+@router.post("/complete", response_model=OnboardResponse)
+async def complete(request: OnboardRequest):
     """
-    Import initial aircraft and mechanics data.
+    Complete onboarding for an existing user.
     
-    This is used during onboarding to quickly set up the tenant
-    with demo data.
+    This endpoint:
+    1. Creates a new FalkorDB graph for the tenant
+    2. Sets up the graph schema (indexes)
+    3. Returns authentication token and tenant info
     """
     try:
-        result = complete_onboarding(graph_name, request)
-        return {
-            "success": True,
-            "imported": result
-        }
+        result = complete_onboarding(
+            email=request.email,
+            company_name=request.company_name,
+            full_name=request.full_name
+        )
+        return OnboardResponse(**result)
+    except ValidationError as e:
+        raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Import failed: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Completing onboarding failed: {str(e)}")
 
 
-@router.get("/status")
-async def onboard_status(graph_name: str) -> OnboardStatusResponse:
+@router.post("/bulk", response_model=OnboardResponse)
+async def bulk_import(request: BulkImportRequest):
     """
-    Check the onboarding status for a tenant graph.
+    Bulk import onboarding data for a tenant.
     
-    Returns whether the tenant has completed setup:
-    - Admin user exists
-    - At least one aircraft exists
-    - At least one mechanic exists
+    This endpoint:
+    1. Creates a new FalkorDB graph for the tenant
+    2. Sets up the graph schema (indexes)
+    3. Bulk imports customers, mechanics, and jobs
+    4. Returns authentication token and tenant info
     """
     try:
-        result = check_onboarding_status(graph_name)
-        return result
+        result = bulk_import_onboard_data(
+            email=request.email,
+            password=request.password,
+            company_name=request.company_name,
+            full_name=request.full_name,
+            customers=request.customers,
+            mechanics=request.mechanics,
+            jobs=request.jobs
+        )
+        return OnboardResponse(**result)
+    except ValidationError as e:
+        raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Status check failed: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Bulk onboarding failed: {str(e)}")
 
 
-@router.get("/check-email")
-async def check_email(email: str):
+@router.get("/status", response_model=OnboardStatusResponse)
+async def status(tenant_id: str):
     """
-    Check if an email is already registered.
+    Check onboarding status for a tenant.
     """
-    # TODO: Implement email uniqueness check
-    return {"email": email, "available": True}
+    try:
+        result = check_onboarding_status(tenant_id)
+        return OnboardStatusResponse(**result)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Checking onboarding status failed: {str(e)}")

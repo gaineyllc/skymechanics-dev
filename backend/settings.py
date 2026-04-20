@@ -1,9 +1,12 @@
-from pydantic_settings import BaseSettings
+from pydantic_settings import BaseSettings, SettingsConfigDict
 from typing import Optional
 
 
 class Settings(BaseSettings):
     """Application settings from environment variables."""
+    model_config = SettingsConfigDict(
+        env_prefix="",
+    )
     
     # FalkorDB Configuration
     falkordb_host: str = "localhost"

@@ -1,5 +1,7 @@
-# k3d-cluster.yaml - Memory-optimized K3d cluster configuration
-name: skymechanics-dev
+apiVersion: k3d.io/v1alpha5
+kind: Simple
+metadata:
+  name: skymechanics-dev
 servers: 1
 agents: 1
 

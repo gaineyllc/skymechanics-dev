@@ -83,6 +83,24 @@ class CustomerCreateRequest(BaseModel):
     address: Optional[Dict[str, str]] = None
 
 
+class CustomerResponse(BaseModel):
+    """Response for customer operations."""
+    customer_id: int
+    name: str
+    email: str
+    phone: Optional[str] = None
+    address: Optional[Dict[str, str]] = None
+    created_at: datetime
+
+
+class CustomerUpdateRequest(BaseModel):
+    """Request to update a customer."""
+    name: Optional[str] = None
+    email: Optional[str] = None
+    phone: Optional[str] = None
+    address: Optional[Dict[str, str]] = None
+
+
 class JobCreateRequest(BaseModel):
     """Request to create a new job."""
     customer_id: int
@@ -149,6 +167,12 @@ class MechanicProfileRequest(BaseModel):
 
 
 # ========== Response Wrappers ==========
+
+class CustomersResponse(BaseModel):
+    """Response for listing customers."""
+    customers: List[Dict[str, Any]]
+    total: int
+
 
 class SuccessResponse(BaseModel):
     """Standard success response."""

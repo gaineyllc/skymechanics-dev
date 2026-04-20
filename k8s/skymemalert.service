@@ -1,0 +1,14 @@
+[Unit]
+Description=SkyMechanics Memory Alert Service
+After=network.target
+
+[Service]
+Type=simple
+ExecStart=/usr/local/bin/skymem monitor
+Restart=on-failure
+RestartSec=5
+User=gaineyllc
+Group=gaineyllc
+
+[Install]
+WantedBy=multi-user.target

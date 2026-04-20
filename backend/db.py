@@ -2,11 +2,9 @@
 Database connection module for FalkorDB.
 Handles connection pooling and multi-tenant graph management.
 """
-import redis
-from redis.commands.graph import Graph
+import falkordb
 from typing import Optional
 from pydantic_settings import BaseSettings, SettingsConfigDict
-from typing import Optional
 
 
 class DatabaseSettings(BaseSettings):
@@ -50,26 +48,23 @@ class FalkorDBClient:
     
     def connect(self):
         """Establish connection to FalkorDB."""
-        self._client = redis.Redis(
+        self._client = falkordb.FalkorDB(
             host=self.host,
             port=self.port,
-            password=self.password,
-            decode_responses=True
+            password=self.password
         )
-        # Test connection
-        self._client.ping()
         return self
     
     def get_graph(self, graph_name: str = None):
         """Get graph instance."""
         if self._graph is None:
             graph_name = graph_name or self.db_name
-            self._graph = Graph(self._client, graph_name)
+            self._graph = self._client.select_graph(graph_name)
         return self._graph
     
     def set_graph(self, graph_name: str):
         """Switch to a different graph (multi-tenancy)."""
-        self._graph = Graph(self._client, graph_name)
+        self._graph = self._client.select_graph(graph_name)
         return self._graph
     
     def close(self):

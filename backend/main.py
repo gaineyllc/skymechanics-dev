@@ -1,46 +1,20 @@
 """
-FastAPI application for SkyMechanics Platform.
-Provides REST API endpoints for graph database operations.
+Application entry point and FastAPI setup.
+Handles lifespan, logging, and API route registration.
 """
 import structlog
-from fastapi import FastAPI, HTTPException, Depends
-from fastapi.responses import JSONResponse
-from pydantic import ValidationError
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+from contextlib import asynccontextmanager
+from typing import AsyncIterator
 
-from db import db_client
-from models import (
-    GraphQueryRequest,
-    MultiTenantCreateRequest,
-    MultiTenantQueryRequest,
-    EntityCreateRequest,
-    RelationshipCreateRequest,
-    CustomerCreateRequest,
-    JobCreateRequest,
-    JobUpdateRequest,
-    JobStatusRequest,
-    MechanicCreateRequest,
-    SuccessResponse,
-    ErrorResponse
-)
-from settings import settings
-from routes import onboarding as onboarding_router
-from routes import users as users_router
-from routes import jobs as jobs_router
-from routes import mechanics as mechanics_router
-
-# Configure structlog
+# Initialize structlog
 structlog.configure(
     processors=[
         structlog.contextvars.merge_contextvars,
-        structlog.stdlib.filter_by_level,
-        structlog.stdlib.add_logger_name,
-        structlog.stdlib.add_log_level,
-        structlog.stdlib.PositionalArgumentsFormatter(),
+        structlog.processors.add_log_level,
         structlog.processors.TimeStamper(fmt="iso"),
-        structlog.processors.StackInfoRenderer(),
-        structlog.processors.format_exc_info,
-        structlog.processors.UnicodeDecoder(),
-        structlog.stdlib.ProcessorFormatter.wrap_for_formatter,
+        structlog.stdlib.render_to_log_kwargs,
     ],
     wrapper_class=structlog.stdlib.BoundLogger,
     context_class=dict,
@@ -48,95 +22,70 @@ structlog.configure(
     cache_logger_on_first_use=True,
 )
 
-logger = structlog.get_logger(__name__)
+logger = structlog.get_logger()
 
-app = FastAPI(
-    title="SkyMechanics Platform API",
-    description="Graph database API for multi-tenant job management",
-    version="0.1.0"
+# Import routes before creating app
+from routes import (
+    health as health_router,
+    customers as customers_router,
+    jobs as jobs_router,
+    mechanics as mechanics_router,
+    onboarding as onboarding_router,
+    users as users_router,
 )
 
-# Use settings for vLLM URL
-VLLM_URL = settings.vllm_url
+# Import models for Alembic autogenerate support
+import models  # noqa: F401
 
 
-@app.on_event("startup")
-async def startup_event():
-    """Initialize database connection on startup."""
+@asynccontextmanager
+async def lifespan(app: FastAPI) -> AsyncIterator[None]:
+    """Application lifespan manager for startup/shutdown events."""
+    logger.info("Starting SkyMechanics backend service")
+    
+    # Startup
+    logger.info("Initializing database connection")
     try:
+        from db import db_client
         db_client.connect()
-        print("✅ Connected to FalkorDB")
+        logger.info("Database connection established")
     except Exception as e:
-        print(f"❌ Failed to connect to FalkorDB: {e}")
+        logger.warning("Database connection failed", error=str(e))
+    
+    yield
+    
+    # Shutdown
+    logger.info("Shutting down SkyMechanics backend service")
 
 
-@app.on_event("shutdown")
-async def shutdown_event():
-    """Close database connection on shutdown."""
-    db_client.close()
-    print("👋 Closed FalkorDB connection")
+app = FastAPI(
+    title="SkyMechanics API",
+    description="A repair shop management system with graph database capabilities",
+    version="0.1.0",
+    lifespan=lifespan,
+)
 
-
-# ========== Exception Handlers ==========
-
-@app.exception_handler(ValidationError)
-async def validation_exception_handler(request, exc: ValidationError):
-    """Handle validation errors."""
-    return JSONResponse(
-        status_code=400,
-        content=ErrorResponse(
-            success=False,
-            error="Validation Error",
-            details=str(exc.errors())
-        ).model_dump()
-    )
-
-
-@app.exception_handler(Exception)
-async def general_exception_handler(request, exc: Exception):
-    """Handle unexpected errors."""
-    return JSONResponse(
-        status_code=500,
-        content=ErrorResponse(
-            success=False,
-            error="Internal Server Error",
-            details=str(exc)
-        ).model_dump()
-    )
-
-
-# ========== Health Check ==========
-
-@app.get("/health", tags=["System"])
-async def health_check():
-    """Health check endpoint."""
-    try:
-        db_client._client.ping()
-        return {"status": "healthy", "database": "connected"}
-    except Exception as e:
-        return {"status": "unhealthy", "database": f"disconnected: {str(e)}"}
-
-
-# ========== Root Endpoint ==========
-
-@app.get("/")
-async def root():
-    """Root endpoint with API information."""
-    return {
-        "name": "SkyMechanics Platform API",
-        "version": "0.1.0",
-        "description": "Multi-tenant graph database API for job management",
-        "endpoints": {
-            "health": "/health",
-            "jobs": "/api/v1/jobs",
-            "users": "/api/v1/users",
-            "onboarding": "/api/v1/onboard"
-        }
-    }
-
+# CORS middleware
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 # Include routers
-app.include_router(onboarding_router.router)
-app.include_router(users_router.router)
-app.include_router(jobs_router.router)
-app.include_router(mechanics_router.router)
+app.include_router(health_router.router, prefix="/api/v1", tags=["health"])
+app.include_router(health_router.router, prefix="", tags=["health-probes"])  # For liveness/readiness probes
+app.include_router(onboarding_router.router, prefix="/api/v1", tags=["onboarding"])
+app.include_router(users_router.router, prefix="/api/v1", tags=["users"])
+app.include_router(customers_router.router, prefix="/api/v1", tags=["customers"])
+app.include_router(mechanics_router.router, prefix="/api/v1", tags=["mechanics"])
+app.include_router(jobs_router.router, prefix="/api/v1", tags=["jobs"])
+
+
+if __name__ == "__main__":
+    import uvicorn
+    import os
+    port = int(os.environ.get("PORT", 8000))
+    uvicorn.run("main:app", host="0.0.0.0", port=port, reload=True)
