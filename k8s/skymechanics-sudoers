@@ -1,7 +1,7 @@
 # SkyMechanics - Full autonomous setup permissions
 # Install with: sudo visudo -f /etc/sudoers.d/skymechanics
+# Validate with: sudo visudo -c
 
-# User alias
 User_Alias SKYMECHANICS = gaineyllc
 
 # Tools installation
@@ -19,20 +19,28 @@ Cmnd_Alias K3D_MANAGE = /usr/local/bin/k3d cluster create skymechanics-dev, \
                         /usr/local/bin/k3d cluster delete skymechanics-dev, \
                         /usr/local/bin/k3d cluster list
 
-# Kubectl operations
+# Kubectl operations - split each get type
+Cmnd_Alias KUBECTL_GET_PODS = /usr/local/bin/kubectl get pods
+Cmnd_Alias KUBECTL_GET_SVC = /usr/local/bin/kubectl get svc
+Cmnd_Alias KUBECTL_GET_INGRESS = /usr/local/bin/kubectl get ingress
 Cmnd_Alias KUBECTL_MANAGE = /usr/local/bin/kubectl apply -f, \
                             /usr/local/bin/kubectl wait --for=condition=Ready, \
                             /usr/local/bin/kubectl port-forward -n, \
-                            /usr/local/bin/kubectl get pods,svc,ingress, \
+                            KUBECTL_GET_PODS, \
+                            KUBECTL_GET_SVC, \
+                            KUBECTL_GET_INGRESS, \
                             /usr/local/bin/kubectl logs -n, \
                             /usr/local/bin/kubectl top pods -n
 
-# Memory monitoring
+# Memory monitoring - split chown into two commands
+Cmnd_Alias MEMORY_MONITOR_CHOWN = /bin/chown gaineyllc /var/log/skymechanics-resource-alerts.log
+Cmnd_Alias MEMORY_MONITOR_CHGRP = /bin/chgrp gaineyllc /var/log/skymechanics-resource-alerts.log
 Cmnd_Alias MEMORY_MONITOR = /bin/cp /home/gaineyllc/.openclaw/workspace/skymechanics-dev/k8s/monitor-resources.sh /usr/local/bin/skymem, \
                             /bin/chmod +x /usr/local/bin/skymem, \
                             /bin/mkdir -p /var/log, \
                             /usr/bin/touch /var/log/skymechanics-resource-alerts.log, \
-                            /bin/chown gaineyllc:gaineyllc /var/log/skymechanics-resource-alerts.log
+                            MEMORY_MONITOR_CHOWN, \
+                            MEMORY_MONITOR_CHGRP
 
 # Systemd management
 Cmnd_Alias SYSTEMD_MANAGE = /usr/bin/tee /etc/systemd/system/skymemalert.service, \
