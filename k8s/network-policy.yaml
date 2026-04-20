@@ -1,0 +1,83 @@
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: skymechanics-tenant-isolation
+  namespace: skymechanics
+spec:
+  podSelector: {}
+  policyTypes:
+    - Ingress
+    - Egress
+  ingress:
+    # Allow traffic from ingress controller
+    - from:
+        - podSelector:
+            matchLabels:
+              app: ingress-nginx
+      ports:
+        - protocol: TCP
+          port: 8200
+        - protocol: TCP
+          port: 8201
+        - protocol: TCP
+          port: 8202
+    # Allow traffic from auth service to itself
+    - from:
+        - podSelector:
+            matchLabels:
+              app: auth-service
+      ports:
+        - protocol: TCP
+          port: 8200
+    # Allow traffic from mechanics service to FalkorDB
+    - from:
+        - podSelector:
+            matchLabels:
+              app: mechanics-service
+      ports:
+        - protocol: TCP
+          port: 6379
+    # Allow traffic from jobs service to FalkorDB and PostgreSQL
+    - from:
+        - podSelector:
+            matchLabels:
+              app: jobs-service
+      ports:
+        - protocol: TCP
+          port: 6379
+        - protocol: TCP
+          port: 5432
+  egress:
+    # Allow DNS resolution
+    - to:
+        - namespaceSelector: {}
+          podSelector:
+            matchLabels:
+              k8s-app: kube-dns
+      ports:
+        - protocol: UDP
+          port: 53
+    # Allow traffic to PostgreSQL
+    - to:
+        - podSelector:
+            matchLabels:
+              app: postgres
+      ports:
+        - protocol: TCP
+          port: 5432
+    # Allow traffic to FalkorDB
+    - to:
+        - podSelector:
+            matchLabels:
+              app: falkordb
+      ports:
+        - protocol: TCP
+          port: 6379
+    # Allow traffic to Redis
+    - to:
+        - podSelector:
+            matchLabels:
+              app: redis
+      ports:
+        - protocol: TCP
+          port: 6379
