@@ -1,0 +1,91 @@
+# GitHub Actions Workflow for SkyMechanics
+
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+
+    - name: Login to GitHub Container Registry
+      uses: docker/login-action@v3
+      with:
+        registry: ghcr.io
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Build and push auth-service
+      uses: docker/build-push-action@v5
+      with:
+        context: .
+        file: services/auth-service/Dockerfile
+        push: true
+        tags: ghcr.io/gaineyllc/auth-service:latest
+
+    - name: Build and push mechanics-service
+      uses: docker/build-push-action@v5
+      with:
+        context: .
+        file: services/mechanics-service/Dockerfile
+        push: true
+        tags: ghcr.io/gaineyllc/mechanics-service:latest
+
+    - name: Build and push jobs-service
+      uses: docker/build-push-action@v5
+      with:
+        context: .
+        file: services/jobs-service/Dockerfile
+        push: true
+        tags: ghcr.io/gaineyllc/jobs-service:latest
+
+    - name: Build and push analytics-service
+      uses: docker/build-push-action@v5
+      with:
+        context: .
+        file: services/analytics-service/Dockerfile
+        push: true
+        tags: ghcr.io/gaineyllc/analytics-service:latest
+
+    - name: Build and push gateway-service
+      uses: docker/build-push-action@v5
+      with:
+        context: .
+        file: services/gateway-service/Dockerfile
+        push: true
+        tags: ghcr.io/gaineyllc/gateway-service:latest
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/master'
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Configure kubectl
+      uses: azure/k8s-set-context@v3
+      with:
+        method: kubeconfig
+        kubeconfig: ${{ secrets.KUBECONFIG }}
+
+    - name: Deploy to Kubernetes
+      run: |
+        kubectl apply -f k8s/dev/namespace.yaml
+        kubectl apply -f k8s/dev/
+
+    - name: Verify deployment
+      run: |
+        kubectl wait --for=condition=available deployment/auth-service --timeout=120s -n skymechanics
+        kubectl wait --for=condition=available deployment/mechanics-service --timeout=120s -n skymechanics
+        kubectl wait --for=condition=available deployment/jobs-service --timeout=120s -n skymechanics
+        kubectl wait --for=condition=available deployment/analytics-service --timeout=120s -n skymechanics
+        kubectl wait --for=condition=available deployment/gateway-service --timeout=120s -n skymechanics

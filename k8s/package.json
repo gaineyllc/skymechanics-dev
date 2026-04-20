@@ -1,0 +1,13 @@
+{
+  "name": "skymechanics-production-deployment",
+  "version": "0.1.0",
+  "description": "Production deployment configuration for SkyMechanics platform",
+  "scripts": {
+    "deploy:dev": "kubectl apply -f k8s/dev/",
+    "deploy:staging": "kubectl apply -f k8s/staging/",
+    "deploy:prod": "kubectl apply -f k8s/prod/",
+    "rollback": "kubectl rollout undo deployment/",
+    "logs": "kubectl logs -f deployment/",
+    "status": "kubectl get all -n skymechanics"
+  }
+}

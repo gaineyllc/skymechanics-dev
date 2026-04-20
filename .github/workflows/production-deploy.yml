@@ -1,0 +1,37 @@
+name: Production Deployment
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Deployment environment'
+        required: true
+        default: 'staging'
+        type: choice
+        options:
+        - staging
+        - production
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Configure kubectl
+      uses: azure/k8s-set-context@v3
+      with:
+        method: kubeconfig
+        kubeconfig: ${{ secrets.KUBECONFIG }}
+
+    - name: Deploy to ${{ github.event.inputs.environment }}
+      run: |
+        if [ "${{ github.event.inputs.environment }}" == "production" ]; then
+          kubectl apply -f k8s/prod/
+        else
+          kubectl apply -f k8s/staging/
+        fi
+
+    - name: Verify deployment
+      run: |
+        kubectl get all -n skymechanics

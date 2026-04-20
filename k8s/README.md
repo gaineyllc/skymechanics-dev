@@ -1,168 +1,116 @@
-# SkyMechanics K8s Documentation
+# SkyMechanics Kubernetes Deployment
+
+## Overview
+Production Kubernetes manifests for SkyMechanics platform.
+
+## Directory Structure
+
+```
+k8s/
+├── dev/              # Development environment
+├── staging/          # Staging environment
+├── prod/             # Production environment
+├── services/         # Shared service definitions
+├── manifests/        # Kustomize overlays
+└── README.md
+```
+
+## Prerequisites
+
+- Kubernetes cluster (k3d, EKS, GKE, AKS)
+- kubectl configured
+- Docker images pushed to GHCR
 
 ## Quick Start
 
 ```bash
-# Make scripts executable
-chmod +x k8s/*.sh
-
-# Setup local environment with memory monitoring
-sudo ./k8s/setup-local.sh
-
-# Setup K3d cluster (requires sudo)
-cd k8s
-./setup-k3d.sh
+# Create namespace
+kubectl apply -f k8s/dev/namespace.yaml
 
 # Deploy all services
-./deploy-all.sh
+kubectl apply -f k8s/dev/
 
-# Monitor resources
-./k8s/monitor-resources.sh check
-./k8s/monitor-resources.sh monitor
+# Check deployment status
+kubectl get all -n skymechanics
+
+# View logs
+kubectl logs -f deployment/auth-service -n skymechanics
+
+# Scale deployment
+kubectl scale deployment auth-service --replicas=3 -n skymechanics
 ```
 
-**Note**: k3d/kubectl/helm installation requires sudo. See `k8s/MANUAL-SETUP.md` for details.
+## Services
 
-## Architecture
+| Service | Port | Replicas | Status |
+|---------|------|----------|--------|
+| auth-service | 8200 | 2 | Ready |
+| mechanics-service | 8201 | 2 | Ready |
+| jobs-service | 8202 | 2 | Ready |
+| analytics-service | 8203 | 1 | Ready |
+| gateway-service | 8204 | 1 | Ready |
 
+## Ingress Configuration
+
+```yaml
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: skymechanics-ingress
+  namespace: skymechanics
+spec:
+  rules:
+  - host: api.skymechanics.com
+    http:
+      paths:
+      - path: /api/v1
+        pathType: Prefix
+        backend:
+          service:
+            name: auth-service
+            port:
+              number: 8200
 ```
-┌──────────────────────────────────────────────────────────────┐
-│                   Kubernetes Cluster                         │
-│                                                              │
-│  ┌──────────┐  ┌──────────┐  ┌──────────┐  ┌────────────┐ │
-│  │  Ingress │  │ Auth SVC │  │Mech SVC  │  │ Jobs SVC   │ │
-│  │ Traefik  │  │  :8000   │  │  :8001   │  │  :8002     │ │
-│  └─────┬────┘  └─────┬────┘  └─────┬────┘  └─────┬──────┘ │
-│        │             │             │             │          │
-│  ┌─────▼─────────────▼─────────────▼─────────────▼──────┐  │
-│  │              FalkorDB (Graph DB) :6379                 │  │
-│  │              PostgreSQL (TimescaleDB) :5432            │  │
-│  │              Redis (Cache) :6379                       │  │
-│  └────────────────────────────────────────────────────────┘  │
-│                                                              │
-│  ┌────────────────────────────────────────────────────────┐  │
-│  │              Metrics Server (resource monitoring)      │  │
-│  └────────────────────────────────────────────────────────┘  │
-└──────────────────────────────────────────────────────────────┘
-```
 
-## Resource Limits
+## Environment Variables
 
-All services have memory and CPU limits configured to protect your host:
+| Variable | Description |
+|----------|-------------|
+| PORT | Service port |
+| FALKORDB_HOST | FalkorDB hostname |
+| FALKORDB_PORT | FalkorDB port (6379) |
+| REDIS_HOST | Redis hostname |
+| REDIS_PORT | Redis port (6379) |
+| POSTGRES_HOST | PostgreSQL hostname |
+| POSTGRES_PORT | PostgreSQL port (5432) |
+| CLICKHOUSE_HOST | ClickHouse hostname |
+| CLICKHOUSE_PORT | ClickHouse port (9000) |
 
-| Service | Requests | Limits | Memory-Safe |
-|---------|----------|--------|-------------|
-| FalkorDB | 256Mi | 512Mi | ✅ |
-| PostgreSQL | 512Mi | 1Gi | ✅ |
-| Redis | 128Mi | 256Mi | ✅ |
-| Auth Service | 256Mi | 512Mi | ✅ |
-| Mechanics Service | 256Mi | 512Mi | ✅ |
-| Jobs Service | 256Mi | 512Mi | ✅ |
-| **Total** | ~1.75Gi | ~3.5Gi | ✅ |
+## Monitoring
 
-## Memory Monitoring
-
-### Continuous Monitoring
+### Prometheus Metrics
 ```bash
-./k8s/monitor-resources.sh monitor
+kubectl port-forward -n skymechanics svc/prometheus 9090:9090
 ```
 
-### One-time Check
+### Grafana Dashboard
 ```bash
-./k8s/monitor-resources.sh check
+kubectl port-forward -n monitoring svc/grafana 3000:3000
 ```
 
-### System-wide Alert
-```bash
-./k8s/monitor-resources.sh alert-script
-```
-
-The alert script monitors host memory and sends Telegram notifications when usage exceeds 85%.
-
-## Service Endpoints
-
-| Service | Port | URL |
-|---------|------|-----|
-| Auth | 8000 | http://localhost:8000 |
-| Mechanics | 8001 | http://localhost:8001 |
-| Jobs | 8002 | http://localhost:8002 |
-| FalkorDB Browser | 3000 | http://localhost:3000 |
-| PostgreSQL | 5432 | localhost:5432 |
-| Redis | 6379 | localhost:6379 |
-
-## Local Port Forwarding
-
-To access services from your host machine:
+## Rollback
 
 ```bash
-# FalkorDB
-kubectl port-forward -n skymechanics svc/falkordb 6379:6379 &
-
-# PostgreSQL
-kubectl port-forward -n skymechanics svc/postgres 5432:5432 &
-
-# Auth Service
-kubectl port-forward -n skymechanics svc/auth-service 8000:8000 &
-
-# Mechanics Service
-kubectl port-forward -n skymechanics svc/mechanics-service 8001:8001 &
-
-# Jobs Service
-kubectl port-forward -n skymechanics svc/jobs-service 8002:8002 &
+kubectl rollout undo deployment/auth-service -n skymechanics
+kubectl rollout history deployment/auth-service -n skymechanics
 ```
 
-## Clean Up
+## Scaling
 
 ```bash
-# Stop all services
-./k8s/undeploy-all.sh
+# Manual scaling
+kubectl scale deployment auth-service --replicas=5 -n skymechanics
 
-# Remove K3d cluster
-k3d cluster delete skymechanics-dev
+# Auto-scaling (HPA)
+kubectl autoscale deployment auth-service --min=2 --max=10 -n skymechanics
 ```
-
-## Troubleshooting
-
-### High Memory Usage
-```bash
-# Check current memory
-./k8s/monitor-resources.sh check
-
-# View pod resource usage
-kubectl top pods -n skymechanics
-
-# Check container stats
-docker stats
-```
-
-### Service Not Responding
-```bash
-# Check pod status
-kubectl get pods -n skymechanics
-
-# Check logs
-kubectl logs -n skymechanics <pod-name>
-
-# Restart pod
-kubectl rollout restart deployment -n skymechanics <deployment-name>
-```
-
-### Database Connection Issues
-```bash
-# Check FalkorDB
-kubectl exec -n skymechanics <falkordb-pod> -- redis-cli -a <password> ping
-
-# Check PostgreSQL
-kubectl exec -n skymechanics <postgres-pod> -- pg_isready -U postgres
-```
-
-## Next Steps
-
-1. **Monitor resources** - Keep `skymem monitor` running
-2. **Check memory pressure** - System alerts at 85% usage
-3. **Review service logs** - `kubectl logs -n skymechanics <pod>`
-4. **Scale up as needed** - Increase replicas if load increases
-
----
-
-**Safety First**: Your system has 121 GiB RAM. The K8s cluster uses ~3.5 GiB max. Memory alerts trigger at 85% host usage to protect your host system.
