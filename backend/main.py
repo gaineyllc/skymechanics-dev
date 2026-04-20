@@ -77,7 +77,6 @@ app.add_middleware(
 
 # Include routers
 app.include_router(health_router.router, prefix="/api/v1", tags=["health"])
-app.include_router(health_router.router, prefix="", tags=["health-probes"])  # For liveness/readiness probes
 app.include_router(onboarding_router.router, prefix="/api/v1", tags=["onboarding"])
 app.include_router(users_router.router, prefix="/api/v1", tags=["users"])
 app.include_router(customers_router.router, prefix="/api/v1", tags=["customers"])
