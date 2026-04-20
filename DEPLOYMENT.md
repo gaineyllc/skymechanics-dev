@@ -6,7 +6,27 @@
 All services now use ports **8200+** to avoid conflicts with vLLM (port 8000).
 
 ## Phase 2 Complete ✅
-### Kubernetes Infrastructure
+### Real-Time & WebSocket Gateway
+
+| Component | Port | Status |
+|-----------|------|--------|
+| Gateway Service | 8204 | Built |
+
+**Features:**
+- Real-time event broadcasting via WebSocket
+- Mechanic location updates
+- Job status notifications
+- Global alerts
+- Heartbeat health checks
+
+**Endpoints:**
+- `/ws/health` - Basic health check
+- `/ws/mechanics/{id}/updates` - Mechanic-specific updates
+- `/ws/jobs/{id}/updates` - Job-specific status changes
+- `/ws/global/notifications` - System-wide alerts
+
+## Phase 3 Complete ✅
+### Analytics & Reporting Infrastructure
 
 - HPA configs (2-10 replicas per service)
 - Network policies for tenant isolation
@@ -23,6 +43,7 @@ All services now use ports **8200+** to avoid conflicts with vLLM (port 8000).
 | Mechanics Service | 8201 | Built |
 | Jobs Service | 8202 | Built |
 | Analytics Service | 8203 | Built |
+| Gateway Service | 8204 | Built |
 | ClickHouse | 9000/8123 | Ready |
 
 **Docker Images Built:**
@@ -69,6 +90,7 @@ npm run android  # or npm run ios
 | mechanics-service | 8201 | Built |
 | jobs-service | 8202 | Built |
 | analytics-service | 8203 | Built |
+| gateway-service | 8204 | Built |
 | skymechanics-falkordb | 6379 | Healthy |
 | skymechanics-redis | 6379 | Running |
 | clickhouse | 9000/8123 | Ready |
@@ -93,6 +115,23 @@ npm run android  # or npm run ios
 - Profile management
 - Auth context with token persistence
 
+## WebSocket Client (Mobile)
+
+```typescript
+// Example: Subscribe to mechanic updates
+class WebSocketClient {
+  connect(endpoint: string, onMessage: (data: any) => void) {
+    const ws = new WebSocket(`ws://${endpoint}`);
+    ws.onmessage = (event) => onMessage(JSON.parse(event.data));
+    return ws;
+  }
+
+  subscribeToMechanic(mechanicId: number, callback: (data: any) => void) {
+    return this.connect(`localhost:8204/ws/mechanics/${mechanicId}/updates`, callback);
+  }
+}
+```
+
 ## API Endpoints
 
 ### Auth Service
@@ -115,6 +154,13 @@ npm run android  # or npm run ios
 - **Mechanic Metrics**: /api/v1/metrics/mechanics
 - **Revenue Metrics**: /api/v1/metrics/revenue
 
+### Gateway Service (WebSocket)
+- **Health Check**: http://localhost:8204/health
+- **WebSocket**: ws://localhost:8204/ws
+- **Mechanic Updates**: ws://localhost:8204/ws/mechanics/{id}/updates
+- **Job Updates**: ws://localhost:8204/ws/jobs/{id}/updates
+- **Global Notifications**: ws://localhost:8204/ws/global/notifications
+
 ## Ports Used
 
 | Range | Purpose | Status |
@@ -124,6 +170,7 @@ npm run android  # or npm run ios
 | 8201 | mechanics-service | Ready |
 | 8202 | jobs-service | Ready |
 | 8203 | analytics-service | Ready |
+| 8204 | gateway-service | Ready |
 | 3000-3099 | Frontend services | React (3003) |
 | 5432 | PostgreSQL | Auth service |
 | 6379 | FalkorDB/Redis | Active |
@@ -146,6 +193,9 @@ cd services/jobs-service && uvicorn main:app --host 0.0.0.0 --port 8202
 
 # Terminal 4: Start analytics service
 cd services/analytics-service && uvicorn main:app --host 0.0.0.0 --port 8203
+
+# Terminal 5: Start gateway service
+cd services/gateway-service && uvicorn main:app --host 0.0.0.0 --port 8204
 ```
 
 ### Start with Docker
