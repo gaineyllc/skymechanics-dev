@@ -1,0 +1,66 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: skymechanics
+  labels:
+    name: skymechanics
+    memory-optimized: "true"
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: skymechanics-config
+  namespace: skymechanics
+data:
+  FALKORDB_HOST: "falkordb.skymechanics.svc.cluster.local"
+  FALKORDB_PORT: "6379"
+  POSTGRES_HOST: "postgres.skymechanics.svc.cluster.local"
+  POSTGRES_PORT: "5432"
+  REDIS_HOST: "redis.skymechanics.svc.cluster.local"
+  REDIS_PORT: "6379"
+  APP_ENV: "development"
+  LOG_LEVEL: "info"
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: skymechanics-secrets
+  namespace: skymechanics
+type: Opaque
+data:
+  # Base64 encoded: skymechanics-dev
+  FALKORDB_PASSWORD: c2t5bWVjaGFuaWNzLWRldg==
+  POSTGRES_PASSWORD: c2t5bWVjaGFuaWNzLWRldg==
+  REDIS_PASSWORD: c2t5bWVjaGFuaWNzLWRldg==
+  JWT_SECRET: c2t5bWVjaGFuaWNzLWp3dC1zZWNyZXQtZGV2
+  API_KEY: c2t5bWVjaGFuaWNzLWFwaS1rZXk=
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: skymechanics-sa
+  namespace: skymechanics
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: skymechanics-role
+  namespace: skymechanics
+rules:
+  - apiGroups: [""]
+    resources: ["configmaps", "secrets"]
+    verbs: ["get", "list", "watch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: skymechanics-role-binding
+  namespace: skymechanics
+subjects:
+  - kind: ServiceAccount
+    name: skymechanics-sa
+    namespace: skymechanics
+roleRef:
+  kind: Role
+  name: skymechanics-role
+  apiGroup: rbac.authorization.k8s.io

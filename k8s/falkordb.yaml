@@ -1,0 +1,109 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: falkordb
+  namespace: skymechanics
+  labels:
+    app: falkordb
+    memory-optimized: "true"
+spec:
+  serviceName: falkordb
+  replicas: 1
+  selector:
+    matchLabels:
+      app: falkordb
+  template:
+    metadata:
+      labels:
+        app: falkordb
+        memory-optimized: "true"
+    spec:
+      serviceAccountName: skymechanics-sa
+      containers:
+      - name: falkordb
+        image: falkordb/falkordb-server:latest
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 6379
+          name: redis
+        - containerPort: 3000
+          name: browser
+        command: ["redis-server"]
+        args:
+        - "--loadmodule"
+        - "/var/lib/falkordb/bin/falkordb.so"
+        - "--requirepass"
+        - "$(FALKORDB_PASSWORD)"
+        - "--maxmemory"
+        - "512mb"
+        - "--maxmemory-policy"
+        - "allkeys-lru"
+        - "--save"
+        - ""
+        env:
+        - name: FALKORDB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: skymechanics-secrets
+              key: FALKORDB_PASSWORD
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "100m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+        livenessProbe:
+          exec:
+            command:
+            - redis-cli
+            - -a
+            - $(FALKORDB_PASSWORD)
+            - ping
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        readinessProbe:
+          exec:
+            command:
+            - redis-cli
+            - -a
+            - $(FALKORDB_PASSWORD)
+            - ping
+          initialDelaySeconds: 5
+          periodSeconds: 5
+        volumeMounts:
+        - name: data
+          mountPath: /data
+        - name: module
+          mountPath: /var/lib/falkordb/bin
+      volumes:
+      - name: module
+        emptyDir: {}
+  volumeClaimTemplates:
+  - metadata:
+      name: data
+    spec:
+      accessModes: ["ReadWriteOnce"]
+      resources:
+        requests:
+          storage: 1Gi
+      storageClassName: local-path
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: falkordb
+  namespace: skymechanics
+  labels:
+    app: falkordb
+spec:
+  selector:
+    app: falkordb
+  ports:
+  - name: redis
+    port: 6379
+    targetPort: 6379
+  - name: browser
+    port: 3000
+    targetPort: 3000
+  type: ClusterIP

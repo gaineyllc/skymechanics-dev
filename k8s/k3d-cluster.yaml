@@ -1,0 +1,40 @@
+# k3d-cluster.yaml - Memory-optimized K3d cluster configuration
+name: skymechanics-dev
+servers: 1
+agents: 1
+
+# Resource limits for the cluster
+k3s:
+  # Reduced server resources
+  serverResources:
+    limits:
+      memory: "2Gi"
+      cpu: "2000m"
+    requests:
+      memory: "1Gi"
+      cpu: "500m"
+  # Reduced agent resources
+  agentResources:
+    limits:
+      memory: "2Gi"
+      cpu: "2000m"
+    requests:
+      memory: "1Gi"
+      cpu: "500m"
+
+# Port mappings (reuse existing ports)
+port:
+  - "8080:80@loadbalancer"   # API gateway
+  - "3001:3000@loadbalancer" # Browser
+  - "6379:6379@server:0"     # FalkorDB
+  - "3000:3000@agent:0"      # Agent
+
+# Environment variables for FalkorDB
+env:
+  - "K3D_FALKORDB_PASSWORD=skymechanics-dev"
+  - "K3D_FALKORDB_MODULE=/var/lib/falkordb/bin/falkordb.so"
+
+# Labels for resource management
+labels:
+  - "node.kubernetes.io/instance-type=dev"
+  - "skymechanics.io/memory-optimized=true"
