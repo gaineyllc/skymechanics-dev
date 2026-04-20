@@ -15,7 +15,7 @@ Scale from MVP to Uber-like platform while staying within free-tier constraints 
 | DB | FalkorDB | ✅ | Graph database (core data model) |
 | Auth | JWT | ✅ | Custom implementation |
 | Frontend | React | ✅ | Vite build |
-| Hosting | VPS | ✅ | Self-hosted |
+| Hosting | k3d | ✅ | Local Kubernetes cluster |
 
 ### What's Done
 - [x] Multi-tenant architecture (graph-per-tenant)
@@ -24,40 +24,47 @@ Scale from MVP to Uber-like platform while staying within free-tier constraints 
 - [x] Basic job workflow
 
 ### FalkorDB Current Status
-**Running**: Self-hosted on GB10 workstation
-**Container**: `gb10-falkordb` (Docker)
+**Running**: k3d cluster (skymechanics-dev)
+**Container**: FalkorDB StatefulSet
 **Port**: 6379
-**Docker Compose**:
-```yaml
-version: '3.8'
-services:
-  falkordb:
-    image: falkordb/falkordb:latest
-    container_name: gb10-falkordb
-    ports:
-      - "6379:6379"
-    volumes:
-      - falkordb-data:/data
-    restart: unless-stopped
-volumes:
-  falkordb-data:
-```
+**Kubernetes Manifest**: `k8s/falkordb.yaml`
 
-### How FalkorDB Scales
-| Approach | Current | Phase 1+ |
-|----------|---------|----------|
-| Data Model | Single graph per tenant | Graph per tenant (unchanged) |
-| Connection | Direct Python driver | Connection pooling + caching |
-| Scaling | Single instance | Read replicas (FalkorDB Enterprise) |
-| Backup | Manual snapshot | Automated backups |
+---
 
-### Future FalkorDB Options
-| Option | Cost | Notes |
-|--------|------|-------|
-| Self-hosted | Free | Keep GB10 or upgrade hardware |
-| FalkorDB Cloud | Paid | Managed, auto-scaling |
-| Redis Graph | Free | Deprecated, not recommended |
-| Nebula Graph | Free | Alternative open-source graph DB |
+## Phase 0.5: Service Breakout & Infrastructure (Current) - **Completed**
+
+### Stack Additions
+| Component | Tool | Free Tier | Notes |
+|-----------|------|-----------|-------|
+| Auth Service | FastAPI + PostgreSQL | ✅ | `services/auth-service/` |
+| Mechanic Service | FastAPI + FalkorDB | ✅ | `services/mechanics-service/` |
+| Jobs Service | FastAPI + FalkorDB | ✅ | `services/jobs-service/` |
+| Shared Models | Pydantic | ✅ | `shared/models.py` |
+| Redis Cache | Redis 7 | ✅ | `k8s/redis.yaml` |
+| Observability | Prometheus + Grafana | ✅ | `k8s/prometheus/`, `k8s/grafana/` |
+
+### What's Done
+- [x] Extracted backend into 3 microservices
+- [x] Created shared models package for cross-service consistency
+- [x] Set up Redis for caching and Pub/Sub
+- [x] Deployed Prometheus for metrics collection
+- [x] Deployed Grafana for dashboard visualization
+- [x] Configured alerting rules (ServiceDown, HighErrorRate, HighMemory/CPU)
+- [x] Updated Kubernetes manifests for each service
+
+### Services Endpoints
+| Service | Port | Database |
+|---------|------|----------|
+| Auth Service | 8000 | PostgreSQL |
+| Mechanics Service | 8001 | FalkorDB |
+| Jobs Service | 8002 | FalkorDB |
+
+### Observability Access
+| Tool | Port | Access |
+|------|------|--------|
+| Prometheus | 9090 | `kubectl port-forward -n skymechanics svc/prometheus 9090:9090` |
+| Grafana | 3000 | `kubectl port-forward -n skymechanics svc/grafana 3000:3000` |
+| Redis Insight | 5540 | `kubectl port-forward -n skymechanics svc/redis-insight 5540:5540` |
 
 ---
 
@@ -386,7 +393,7 @@ CREATE TABLE mechanic_metrics (
    - Realtime (WebSockets)
    - **Saves**: $100+/month in infrastructure
 
-2. **Self-host监控 tools**:
+2. **Self-host monitoring tools**:
    - Prometheus + Grafana (free)
    - Loki for logs (free)
    - Alertmanager for alerts (free)
