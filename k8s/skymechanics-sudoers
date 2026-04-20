@@ -1,0 +1,33 @@
+# SkyMechanics - Limited sudo for development
+# Install with: sudo visudo -f /etc/sudoers.d/skymechanics
+# Validate with: sudo visudo -c
+
+# User alias (optional, for clarity)
+User_Alias SKYMECHANICS = gaineyllc
+
+# Cmnd alias for k3d installation
+Cmnd_Alias K3D_INSTALL = /usr/bin/curl, /usr/bin/install, /bin/mkdir -p /usr/local/bin
+
+# Cmnd alias for kubectl installation
+Cmnd_Alias KUBECTL_INSTALL = /usr/bin/curl, /usr/bin/install
+
+# Cmnd alias for setup-local.sh
+Cmnd_Alias SETUP_LOCAL = /bin/bash /home/gaineyllc/.openclaw/workspace/skymechanics-dev/k8s/setup-local.sh
+
+# Cmnd alias for systemd service management
+Cmnd_Alias SYSTEMD_MANAGE = /bin/systemctl daemon-reload, \
+                            /bin/systemctl enable skymemalert, \
+                            /bin/systemctl start skymemalert, \
+                            /bin/systemctl stop skymemalert, \
+                            /bin/systemctl disable skymemalert, \
+                            /bin/rm /etc/systemd/system/skymemalert.service
+
+# Cmnd alias for script installation
+Cmnd_Alias SCRIPT_INSTALL = /bin/cp /home/gaineyllc/.openclaw/workspace/skymechanics-dev/k8s/monitor-resources.sh /usr/local/bin/skymem
+
+# Allow user to run specific commands without password
+SKYMECHANICS ALL=(root) NOPASSWD: K3D_INSTALL
+SKYMECHANICS ALL=(root) NOPASSWD: KUBECTL_INSTALL
+SKYMECHANICS ALL=(root) NOPASSWD: SETUP_LOCAL
+SKYMECHANICS ALL=(root) NOPASSWD: SYSTEMD_MANAGE
+SKYMECHANICS ALL=(root) NOPASSWD: SCRIPT_INSTALL
