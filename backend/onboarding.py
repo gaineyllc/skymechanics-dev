@@ -43,6 +43,27 @@ class BulkImportRequest(BaseModel):
         extra = 'forbid'
 
 
+class MechanicProfileRequest(BaseModel):
+    """Request model for mechanic profile."""
+    license_number: Optional[str] = None
+    certifications: List[str] = []
+    availability: Optional[dict] = None
+    current_location: Optional[dict] = None
+
+    class Config:
+        extra = 'allow'
+
+
+class MechanicProfile(BaseModel):
+    """Response model for mechanic profile."""
+    license_number: Optional[str] = None
+    certifications: List[str] = []
+    availability: Optional[dict] = None
+    current_location: Optional[dict] = None
+    created_at: Optional[str] = None
+    updated_at: Optional[str] = None
+
+
 class OnboardResponse(BaseModel):
     """Response model for successful onboarding."""
     success: bool
@@ -273,6 +294,124 @@ def bulk_import_onboard_data(graph_name: str, import_data: BulkImportRequest) ->
     except Exception as e:
         results["errors"].append(f"Bulk import failed: {e}")
         return results
+
+
+def create_mechanic_profile(
+    graph_name: str,
+    user_id: str,
+    profile_data: MechanicProfileRequest
+) -> Optional[dict]:
+    """
+    Create a mechanic profile for an existing user.
+    Returns the profile data if successful, None otherwise.
+    """
+    try:
+        db_client.set_graph(graph_name)
+        graph = db_client.get_graph()
+        
+        # Check if mechanic profile already exists
+        check_query = (
+            "MATCH (u:User {node_id: $user_id})-[:HAS_PROFILE]->(m:MechanicProfile) "
+            "RETURN m"
+        )
+        check_result = graph.query(check_query, params={"user_id": int(user_id)})
+        
+        if check_result.result_set:
+            print(f"Mechanic profile for user {user_id} already exists")
+            # Update existing profile
+            update_query = (
+                "MATCH (u:User {node_id: $user_id})-[:HAS_PROFILE]->(m:MechanicProfile) "
+                "SET m.license_number = $license_number, "
+                "m.certifications = $certifications, "
+                "m.availability = $availability, "
+                "m.current_location = $current_location, "
+                "m.updated_at = $updated_at "
+                "RETURN m"
+            )
+            result = graph.query(update_query, params={
+                "user_id": int(user_id),
+                "license_number": profile_data.license_number,
+                "certifications": profile_data.certifications,
+                "availability": profile_data.availability,
+                "current_location": profile_data.current_location,
+                "updated_at": datetime.utcnow().isoformat()
+            })
+        else:
+            # Create new mechanic profile
+            create_query = (
+                "MATCH (u:User {node_id: $user_id}) "
+                "CREATE (m:MechanicProfile {"
+                "license_number: $license_number, "
+                "certifications: $certifications, "
+                "availability: $availability, "
+                "current_location: $current_location, "
+                "created_at: $created_at, "
+                "updated_at: $updated_at"
+                "}) "
+                "CREATE (u)-[:HAS_PROFILE]->(m) "
+                "RETURN m"
+            )
+            result = graph.query(create_query, params={
+                "user_id": int(user_id),
+                "license_number": profile_data.license_number,
+                "certifications": profile_data.certifications,
+                "availability": profile_data.availability,
+                "current_location": profile_data.current_location,
+                "created_at": datetime.utcnow().isoformat(),
+                "updated_at": datetime.utcnow().isoformat()
+            })
+        
+        if result.result_set:
+            profile_props = result.result_set[0][0].properties
+            return {
+                "success": True,
+                "message": "Mechanic profile created/updated successfully",
+                "profile": {
+                    "license_number": profile_props.get("license_number"),
+                    "certifications": profile_props.get("certifications", []),
+                    "availability": profile_props.get("availability"),
+                    "current_location": profile_props.get("current_location"),
+                    "created_at": profile_props.get("created_at"),
+                    "updated_at": profile_props.get("updated_at")
+                }
+            }
+        
+        return {"success": False, "message": "Failed to create mechanic profile"}
+    except Exception as e:
+        print(f"Error creating mechanic profile: {e}")
+        return {"success": False, "message": str(e)}
+
+
+def get_mechanic_profile(graph_name: str, user_id: str) -> Optional[dict]:
+    """
+    Get mechanic profile for a user.
+    Returns the profile data if found, None otherwise.
+    """
+    try:
+        db_client.set_graph(graph_name)
+        graph = db_client.get_graph()
+        
+        query = (
+            "MATCH (u:User {node_id: $user_id})-[:HAS_PROFILE]->(m:MechanicProfile) "
+            "RETURN m"
+        )
+        result = graph.query(query, params={"user_id": int(user_id)})
+        
+        if result.result_set:
+            profile_props = result.result_set[0][0].properties
+            return {
+                "license_number": profile_props.get("license_number"),
+                "certifications": profile_props.get("certifications", []),
+                "availability": profile_props.get("availability"),
+                "current_location": profile_props.get("current_location"),
+                "created_at": profile_props.get("created_at"),
+                "updated_at": profile_props.get("updated_at")
+            }
+        
+        return None
+    except Exception as e:
+        print(f"Error getting mechanic profile: {e}")
+        return None
 
 
 def check_onboarding_status(graph_name: str) -> OnboardStatusResponse:

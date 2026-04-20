@@ -41,6 +41,14 @@ export interface Mechanic {
     phone: string
     specialties: string[]
   }
+  profile?: {
+    license_number: string
+    certifications: string[]
+    availability: Record<string, any>
+    current_location: { lat: number; lng: number }
+    created_at: string
+    updated_at: string
+  }
 }
 
 // Customers
@@ -102,6 +110,19 @@ export const fetchMechanics = async (): Promise<Mechanic[]> => {
 
 export const createMechanic = async (data: Partial<Mechanic['properties']>): Promise<Mechanic> => {
   const response = await api.post('/mechanics', data)
+  return response.data
+}
+
+export const getMechanic = async (id: number): Promise<Mechanic> => {
+  const response = await api.get(`/mechanics/${id}`)
+  return response.data
+}
+
+export const updateMechanicProfile = async (
+  id: number,
+  profileData: Partial<Mechanic['profile']>
+): Promise<Mechanic> => {
+  const response = await api.post(`/mechanics/${id}/profile`, profileData)
   return response.data
 }
 

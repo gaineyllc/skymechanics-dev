@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react'
 import { styled } from 'baseui'
-import { fetchMechanics, createMechanic, Mechanic } from '../services/api'
+import { fetchMechanics, createMechanic, Mechanic, getMechanic } from '../services/api'
 import { CreateMechanicModal } from '../components/CreateMechanicModal'
+import { MechanicsDetailModal } from '../components/MechanicsDetailModal'
 
 const MechanicsContainer = styled('div', {
   backgroundColor: '#ffffff',
@@ -73,7 +74,7 @@ const Button = ({ kind = 'primary', onClick, children, disabled = false, size = 
     tertiary: {
       backgroundColor: 'transparent',
       color: '#666666',
-      '&:hover': { backgroundColor: '#f0f0f0' },
+      '&:hover': { backgroundColor: '#f0f0e0' },
     },
     negative: {
       backgroundColor: '#ff4d4d',
@@ -163,7 +164,9 @@ export function Mechanics() {
   const [mechanics, setMechanics] = useState<Mechanic[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [isModalOpen, setIsModalOpen] = useState(false)
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
+  const [selectedMechanic, setSelectedMechanic] = useState<Mechanic | null>(null)
+  const [isDetailModalOpen, setIsDetailModalOpen] = useState(false)
 
   useEffect(() => {
     const loadMechanics = async () => {
@@ -180,7 +183,21 @@ export function Mechanics() {
   }, [])
 
   const handleCreateMechanic = async () => {
-    setIsModalOpen(true)
+    setIsCreateModalOpen(true)
+  }
+
+  const handleViewMechanic = async (mechanic: Mechanic) => {
+    try {
+      const detailed = await getMechanic(mechanic.node_id)
+      setSelectedMechanic(detailed)
+      setIsDetailModalOpen(true)
+    } catch (err) {
+      setError(`Failed to load mechanic details: ${err}`)
+    }
+  }
+
+  const handleCreateSuccess = (mechanic: Mechanic) => {
+    setMechanics((prev) => [...prev, mechanic])
   }
 
   if (loading) {
@@ -230,8 +247,12 @@ export function Mechanics() {
                 <MechanicHeader>
                   <MechanicName>{mechanic.properties.name}</MechanicName>
                   <div style={{ display: 'flex', gap: '8px' }}>
-                    <Button kind="secondary" size="compact">View</Button>
-                    <Button kind="secondary" size="compact">Edit</Button>
+                    <Button kind="secondary" size="compact" onClick={() => handleViewMechanic(mechanic)}>
+                      View Details
+                    </Button>
+                    <Button kind="secondary" size="compact" onClick={() => {}}>
+                      Edit
+                    </Button>
                   </div>
                 </MechanicHeader>
                 <div style={{ fontSize: '14px', color: '#666666', marginBottom: '8px' }}>
@@ -241,7 +262,7 @@ export function Mechanics() {
                   {mechanic.properties.phone}
                 </div>
                 <div style={{ display: 'flex', gap: '16px', fontSize: '12px', color: '#999999' }}>
-                  <span>Certifications: {mechanic.properties.specialties.join(', ')}</span>
+                  <span>Certifications: {mechanic.properties.specialties.join(', ') || 'None'}</span>
                 </div>
               </MechanicCard>
             </div>
@@ -250,10 +271,18 @@ export function Mechanics() {
       </div>
 
       <CreateMechanicModal
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        onSuccess={(mechanic) => setMechanics((prev) => [...prev, mechanic])}
+        isOpen={isCreateModalOpen}
+        onClose={() => setIsCreateModalOpen(false)}
+        onSuccess={handleCreateSuccess}
       />
+
+      {selectedMechanic && (
+        <MechanicsDetailModal
+          isOpen={isDetailModalOpen}
+          onClose={() => setIsDetailModalOpen(false)}
+          mechanic={selectedMechanic}
+        />
+      )}
     </MechanicsContainer>
   )
 }
