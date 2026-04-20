@@ -17,6 +17,7 @@ spec:
       containers:
       - name: analytics-service
         image: ghcr.io/gaineyllc/analytics-service:latest
+        imagePullPolicy: Never
         ports:
         - containerPort: 8203
         env:
@@ -35,13 +36,13 @@ spec:
             cpu: "1000m"
         livenessProbe:
           httpGet:
-            path: /api/v1/health
+            path: /
             port: 8203
           initialDelaySeconds: 30
           periodSeconds: 10
         readinessProbe:
           httpGet:
-            path: /api/v1/health
+            path: /
             port: 8203
           initialDelaySeconds: 5
           periodSeconds: 5

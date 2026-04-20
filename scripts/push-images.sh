@@ -10,22 +10,14 @@ echo "=== GHCR Push Script ==="
 echo "Repository: $REPO"
 echo ""
 
-# Check for GITHUB_TOKEN
+# Get token from gh CLI
+GITHUB_TOKEN=$(gh auth token)
 if [ -z "$GITHUB_TOKEN" ]; then
-    echo "❌ GITHUB_TOKEN not set"
-    echo ""
-    echo "Please set your GitHub Personal Access Token:"
-    echo "1. Go to https://github.com/settings/tokens"
-    echo "2. Click 'Generate new token' → 'Fine-grained token'"
-    echo "3. Repository access: 'Only select repositories' → 'gaineyllc/skymechanics-dev'"
-    echo "4. Permissions → Package:
-       - Read: Allow
-       - Write: Allow"
-    echo "5. Copy the token and run:"
-    echo "   export GITHUB_TOKEN=\"your-token-here\""
-    echo ""
+    echo "❌ Failed to get token from gh CLI"
     exit 1
 fi
+echo "✅ Got token from gh CLI"
+echo ""
 
 # Authenticate
 echo "Authenticating to GHCR..."
