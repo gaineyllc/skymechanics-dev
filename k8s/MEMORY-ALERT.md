@@ -106,11 +106,29 @@ sudo systemctl daemon-reload
 ```bash
 # Start monitoring in background
 ./k8s/monitor-resources.sh monitor &
+
+# Or create custom systemd service
+sudo tee /etc/systemd/system/skymemalert.service > /dev/null << 'EOF'
+[Unit]
+Description=SkyMechanics Memory Alert Service
+After=network.target
+
+[Service]
+Type=simple
+ExecStart=/home/gaineyllc/.openclaw/workspace/skymechanics-dev/k8s/monitor-resources.sh monitor
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+sudo systemctl daemon-reload
+sudo systemctl enable skymemalert
+sudo systemctl start skymemalert
 ```
 
 ## Manual Alternative Uninstall
-
-To remove manual installation:
 
 ```bash
 # Kill background process
