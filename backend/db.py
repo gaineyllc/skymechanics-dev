@@ -3,6 +3,7 @@ Database connection module for FalkorDB.
 Handles connection pooling and multi-tenant graph management.
 """
 import falkordb
+import redis
 from typing import Optional
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
@@ -27,6 +28,16 @@ db_settings = DatabaseSettings()
 def get_db_settings() -> DatabaseSettings:
     """Get database settings, prioritizing environment variables."""
     return DatabaseSettings()
+
+
+def get_redis_client() -> redis.asyncio.Redis:
+    """Get Redis client for Pub/Sub operations."""
+    return redis.asyncio.Redis(
+        host=db_settings.host,
+        port=db_settings.port,
+        password=db_settings.password,
+        decode_responses=True
+    )
 
 
 class FalkorDBClient:

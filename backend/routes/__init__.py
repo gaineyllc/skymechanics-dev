@@ -5,5 +5,20 @@ from .mechanics import router as mechanics_router
 from .jobs import router as jobs_router
 from .users import router as users_router
 from .health import router as health_router
+from .events import (
+    router as events_router,
+    websocket_router,
+    publish_event
+)
 
-__all__ = ['onboarding_router', 'customers_router', 'mechanics_router', 'jobs_router', 'users_router', 'health_router']
+__all__ = [
+    'onboarding_router', 
+    'customers_router', 
+    'mechanics_router', 
+    'jobs_router', 
+    'users_router', 
+    'health_router', 
+    'events_router', 
+    'websocket_router', 
+    'publish_event'
+]
