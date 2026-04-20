@@ -1,0 +1,18 @@
+<?xml version="1.0"?>
+<clickhouse>
+    <logger>
+        <level>information</level>
+        <log>/var/log/clickhouse-server/clickhouse-server.log</log>
+        <errorlog>/var/log/clickhouse-server/clickhouse-server.err.log</errorlog>
+        <size>100M</size>
+        <count>3</count>
+    </logger>
+    <http_port>8123</http_port>
+    <tcp_port>9000</tcp_port>
+    <path>/var/lib/clickhouse/</path>
+    <tmp_path>/var/lib/clickhouse/tmp/</tmp_path>
+    <user_files_path>/var/lib/clickhouse/user_files/</user_files_path>
+    <listen_host>0.0.0.0</listen_host>
+    <max_server_memory_usage_to_throw>10000000000</max_server_memory_usage_to_throw>
+    <max_server_memory_usage>16000000000</max_server_memory_usage>
+</clickhouse>

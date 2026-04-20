@@ -1,0 +1,11 @@
+{
+  "name": "skymechanics-analytics-service",
+  "version": "0.1.0",
+  "description": "Analytics service for SkyMechanics - reporting, metrics, business intelligence",
+  "dependencies": {
+    "clickhouse-connect": "^0.5.25",
+    "fastapi": "^0.109.0",
+    "pydantic": "^2.6.1",
+    "uvicorn": "^0.27.1"
+  }
+}
