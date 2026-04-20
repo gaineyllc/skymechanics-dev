@@ -1,12 +1,26 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: redis-config
+  namespace: skymechanics
+data:
+  redis.conf: |
+    maxmemory 256mb
+    maxmemory-policy allkeys-lru
+    appendonly yes
+    appendfilename "appendonly.aof"
+    appendfsync everysec
+
+---
 apiVersion: apps/v1
-kind: Deployment
+kind: StatefulSet
 metadata:
   name: redis
   namespace: skymechanics
   labels:
     app: redis
-    memory-optimized: "true"
 spec:
+  serviceName: redis
   replicas: 1
   selector:
     matchLabels:
@@ -15,55 +29,47 @@ spec:
     metadata:
       labels:
         app: redis
-        memory-optimized: "true"
     spec:
-      serviceAccountName: skymechanics-sa
       containers:
       - name: redis
         image: redis:7-alpine
-        imagePullPolicy: IfNotPresent
         ports:
         - containerPort: 6379
           name: redis
-        command: ["redis-server"]
-        args:
-        - "--requirepass"
-        - "$(REDIS_PASSWORD)"
-        - "--maxmemory"
-        - "256mb"
-        - "--maxmemory-policy"
-        - "allkeys-lru"
-        env:
-        - name: REDIS_PASSWORD
-          valueFrom:
-            secretKeyRef:
-              name: skymechanics-secrets
-              key: REDIS_PASSWORD
+        volumeMounts:
+        - name: config
+          mountPath: /usr/local/etc/redis
+        - name: data
+          mountPath: /data
         resources:
           requests:
-            memory: "128Mi"
-            cpu: "50m"
-          limits:
             memory: "256Mi"
-            cpu: "250m"
+            cpu: "100m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
         livenessProbe:
           exec:
             command:
             - redis-cli
-            - -a
-            - $(REDIS_PASSWORD)
             - ping
           initialDelaySeconds: 10
-          periodSeconds: 5
+          periodSeconds: 10
         readinessProbe:
           exec:
             command:
             - redis-cli
-            - -a
-            - $(REDIS_PASSWORD)
             - ping
           initialDelaySeconds: 5
           periodSeconds: 5
+  volumeClaimTemplates:
+  - metadata:
+      name: data
+    spec:
+      accessModes: ["ReadWriteOnce"]
+      resources:
+        requests:
+          storage: 1Gi
 ---
 apiVersion: v1
 kind: Service
@@ -80,3 +86,61 @@ spec:
     port: 6379
     targetPort: 6379
   type: ClusterIP
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: redis-insight-config
+  namespace: skymechanics
+data:
+  REDIS_HOSTS: "local:redis:6379"
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: redis-insight
+  namespace: skymechanics
+  labels:
+    app: redis-insight
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: redis-insight
+  template:
+    metadata:
+      labels:
+        app: redis-insight
+    spec:
+      containers:
+      - name: redis-insight
+        image: redis/redisinsight:latest
+        ports:
+        - containerPort: 5540
+          name: http
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "100m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: redis-insight
+  namespace: skymechanics
+  labels:
+    app: redis-insight
+spec:
+  selector:
+    app: redis-insight
+  ports:
+  - name: http
+    port: 5540
+    targetPort: 5540
+  type: LoadBalancer
