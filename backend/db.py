@@ -20,6 +20,8 @@ class DatabaseSettings(BaseSettings):
     port: int = 6379
     password: Optional[str] = None
     db_name: str = "skymechanics"
+    redis_host: Optional[str] = None
+    redis_port: Optional[int] = None
 
 
 db_settings = DatabaseSettings()
@@ -33,10 +35,35 @@ def get_db_settings() -> DatabaseSettings:
 def get_redis_client() -> redis.asyncio.Redis:
     """Get Redis client for Pub/Sub operations."""
     return redis.asyncio.Redis(
-        host=db_settings.host,
-        port=db_settings.port,
+        host=db_settings.redis_host or db_settings.host,
+        port=db_settings.redis_port or db_settings.port,
         password=db_settings.password,
-        decode_responses=True
+        decode_responses=True,
+        max_connections=100  # Production connection pool
+    )
+
+
+def get_redis_cache() -> redis.asyncio.Redis:
+    """Get Redis client for caching operations (separate pool)."""
+    return redis.asyncio.Redis(
+        host=db_settings.redis_host or db_settings.host,
+        port=db_settings.redis_port or db_settings.port,
+        password=db_settings.password,
+        decode_responses=True,
+        db=1,  # Separate DB for cache
+        max_connections=50
+    )
+
+
+def get_redis_pubsub() -> redis.asyncio.Redis:
+    """Get Redis client for Pub/Sub operations (separate pool)."""
+    return redis.asyncio.Redis(
+        host=db_settings.redis_host or db_settings.host,
+        port=db_settings.redis_port or db_settings.port,
+        password=db_settings.password,
+        decode_responses=True,
+        db=2,  # Separate DB for pubsub
+        max_connections=25
     )
 
 

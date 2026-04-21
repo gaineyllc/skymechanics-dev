@@ -20,6 +20,24 @@ services:
       retries: 5
     restart: unless-stopped
 
+  # Redis Cluster - Production caching and Pub/Sub
+  redis:
+    image: redis/redis-stack:latest
+    container_name: skymechanics-redis
+    ports:
+      - "6380:6379"  # Redis port
+      - "8001:8001"  # RedisInsight
+    volumes:
+      - redis-data:/data
+    environment:
+      - REDIS_ARGS=--maxmemory 2gb --maxmemory-policy allkeys-lru
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
   # FalkorDB Browser (optional, for development)
   browser:
     image: falkordb/falkordb-browser:latest
@@ -46,10 +64,13 @@ services:
       - host=falkordb
       - port=6379
       - FALKORDB_PASSWORD=${FALKORDB_PASSWORD:-}
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
       - vllm_url=http://100.69.118.20:8000
-      - ENV=development
+      - ENV=production
     depends_on:
       - falkordb
+      - redis
     volumes:
       - ./backend:/app
       - /home/gaineyllc/.openclaw/workspace:/workspace:ro
@@ -67,3 +88,4 @@ services:
 
 volumes:
   falkordb-data:
+  redis-data:
