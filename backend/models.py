@@ -166,6 +166,146 @@ class MechanicProfileRequest(BaseModel):
     current_location: Optional[Dict[str, float]] = Field(None, description="GPS coordinates {lat, lng}")
 
 
+# ========== Maintenance Procedure Configuration Models ==========
+
+class ConfigSourceCreateRequest(BaseModel):
+    """Request to create a new configuration source."""
+    name: str = Field(..., description="Name of the configuration source")
+    type: str = Field(..., description="Type: 'advisory_circular', 'aircraft_manual', 'oem_document'")
+    version: Optional[str] = Field(None, description="Version or edition")
+    url: Optional[str] = Field(None, description="External URL to documentation")
+    description: Optional[str] = Field(None, description="Description of the source")
+    is_active: bool = Field(default=True, description="Is this source currently active?")
+
+class ConfigSourceResponse(BaseModel):
+    """Response for configuration source operations."""
+    source_id: int
+    name: str
+    type: str
+    version: Optional[str]
+    url: Optional[str]
+    description: Optional[str]
+    is_active: bool
+    created_at: datetime
+    last_updated: datetime
+
+class TaskCreateRequest(BaseModel):
+    """Request to create a new task template."""
+    procedure_id: int = Field(..., description="Parent procedure ID")
+    name: str = Field(..., description="Task name")
+    sequence: int = Field(..., description="Order in procedure")
+    category: str = Field(..., description="Category: 'visual', 'disassembly', 'inspection', 'reassembly'")
+    estimated_duration_minutes: int = Field(..., description="Estimated duration in minutes")
+    required_tools: List[str] = Field(default_factory=list, description="Required tool IDs")
+    required_parts: List[str] = Field(default_factory=list, description="Required part IDs")
+    checklist_items: List[Dict[str, Any]] = Field(default_factory=list, description="Checklist items")
+    instructions: Optional[str] = Field(None, description="Detailed instructions")
+
+class TaskResponse(BaseModel):
+    """Response for task operations."""
+    task_id: int
+    procedure_id: int
+    name: str
+    sequence: int
+    category: str
+    estimated_duration_minutes: int
+    required_tools: List[str]
+    required_parts: List[str]
+    checklist_items: List[Dict[str, Any]]
+    instructions: Optional[str]
+    created_at: datetime
+    updated_at: datetime
+
+class ProcedureTemplateCreateRequest(BaseModel):
+    """Request to create a new procedure template."""
+    name: str = Field(..., description="Procedure name")
+    category: str = Field(..., description="Category: 'annual', '100hr', 'condition', 'repair'")
+    authority: str = Field(..., description="Authority: 'FAA AC 43.13-1B', 'FAA AC 20-106', etc.")
+    estimated_duration_hours: int = Field(..., description="Estimated total duration in hours")
+    required_specialty: str = Field(..., description="Required specialty: 'general', 'powerplant', 'avionics'")
+    source_id: Optional[int] = Field(None, description="Configuration source ID")
+    is_active: bool = Field(default=True, description="Is this procedure active?")
+
+class ProcedureTemplateResponse(BaseModel):
+    """Response for procedure template operations."""
+    procedure_id: int
+    name: str
+    category: str
+    authority: str
+    estimated_duration_hours: int
+    required_specialty: str
+    source_id: Optional[int]
+    is_active: bool
+    created_at: datetime
+    updated_at: datetime
+    tasks: List[Dict[str, Any]] = Field(default_factory=list, description="Tasks in procedure")
+
+class ToolCreateRequest(BaseModel):
+    """Request to create a new tool configuration."""
+    name: str = Field(..., description="Tool name")
+    category: str = Field(..., description="Category: 'torque', 'socket', 'wrench', 'specialty'")
+    part_number: Optional[str] = Field(None, description="Manufacturer part number")
+    calibration_required: bool = Field(default=False, description="Does this tool require calibration?")
+    calibration_interval_months: Optional[int] = Field(None, description="Calibration interval in months")
+    description: Optional[str] = Field(None, description="Tool description")
+
+class ToolResponse(BaseModel):
+    """Response for tool operations."""
+    tool_id: int
+    name: str
+    category: str
+    part_number: Optional[str]
+    calibration_required: bool
+    calibration_interval_months: Optional[int]
+    description: Optional[str]
+    created_at: datetime
+    updated_at: datetime
+
+class PartCreateRequest(BaseModel):
+    """Request to create a new parts catalog entry."""
+    part_number: str = Field(..., description="Manufacturer part number")
+    name: str = Field(..., description="Part name")
+    category: str = Field(..., description="Category: 'structural', 'engine', 'avionics', 'tool'")
+    aircraft_compatible: List[str] = Field(default_factory=list, description="Compatible aircraft type IDs")
+    oem_source: Optional[str] = Field(None, description="OEM manufacturer")
+    description: Optional[str] = Field(None, description="Part description")
+
+class PartResponse(BaseModel):
+    """Response for parts operations."""
+    part_id: int
+    part_number: str
+    name: str
+    category: str
+    aircraft_compatible: List[str]
+    oem_source: Optional[str]
+    description: Optional[str]
+    created_at: datetime
+    updated_at: datetime
+
+class AircraftTypeCreateRequest(BaseModel):
+    """Request to create an aircraft type configuration."""
+    make: str = Field(..., description="Manufacturer (e.g., 'Cessna')")
+    model: str = Field(..., description="Model (e.g., '172R')")
+    category: str = Field(..., description="Category: 'airplane', 'helicopter', 'gyrocopter'")
+    certification: str = Field(default="FAA", description="Certification authority")
+    amm_ref: Optional[str] = Field(None, description="AMM reference")
+    mpd_ref: Optional[str] = Field(None, description="MPD reference")
+    ipc_ref: Optional[str] = Field(None, description="IPC reference")
+
+class AircraftTypeResponse(BaseModel):
+    """Response for aircraft type operations."""
+    aircraft_type_id: int
+    make: str
+    model: str
+    category: str
+    certification: str
+    amm_ref: Optional[str]
+    mpd_ref: Optional[str]
+    ipc_ref: Optional[str]
+    created_at: datetime
+    updated_at: datetime
+
+
 # ========== Response Wrappers ==========
 
 class CustomersResponse(BaseModel):

@@ -1,4 +1,7 @@
 export { WorkflowBuilder } from './WorkflowBuilder'
+export { ProcedureBuilder } from './ProcedureBuilder'
+export { ToolConfiguration } from './ToolConfiguration'
+export { PartsCatalog } from './PartsCatalog'
 export { Layout } from './Layout'
 export { JobStats } from './JobStats'
 export { JobTimeline } from './JobTimeline'

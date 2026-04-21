@@ -5,6 +5,7 @@ from .mechanics import router as mechanics_router
 from .jobs import router as jobs_router
 from .users import router as users_router
 from .health import router as health_router
+from .procedures import router as procedures_router
 from .events import (
     router as events_router,
     websocket_router,
@@ -18,6 +19,7 @@ __all__ = [
     'jobs_router', 
     'users_router', 
     'health_router', 
+    'procedures_router',
     'events_router', 
     'websocket_router', 
     'publish_event'
