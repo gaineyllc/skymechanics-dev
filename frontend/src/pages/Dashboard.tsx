@@ -1,5 +1,4 @@
 import React from 'react'
-import { styled } from 'baseui'
 import { Card, styled as baseStyled } from 'baseui'
 
 const CardContainer = baseStyled('div', {
@@ -9,22 +8,22 @@ const CardContainer = baseStyled('div', {
   boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
 })
 
-const CardHeader = styled('div', {
+const CardHeader = baseStyled('div', {
   marginBottom: '16px',
 })
 
-const CardTitle = styled('h3', {
+const CardTitle = baseStyled('h3', {
   margin: 0,
   fontSize: '18px',
   fontWeight: '600',
   color: '#1a1a1a',
 })
 
-const CardBody = styled('div', {
+const CardBody = baseStyled('div', {
   color: '#333333',
 })
 
-const CardFooter = styled('div', {
+const CardFooter = baseStyled('div', {
   marginTop: '16px',
   paddingTop: '16px',
   borderTop: '1px solid #e0e0e0',

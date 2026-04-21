@@ -12,6 +12,7 @@ import { JobDetail } from './pages/JobDetail'
 import { WorkflowBuilder } from './components/WorkflowBuilder'
 import { Customers } from './pages/Customers'
 import { Mechanics } from './pages/Mechanics'
+import { Inspectors } from './pages/Inspectors'
 import Onboarding from './pages/Onboarding'
 import OnboardingSuccess from './pages/OnboardingSuccess'
 import QuickStartWizard from './components/QuickStartWizard'
@@ -95,6 +96,14 @@ export default function App() {
                   element={
                     <PrivateRoute>
                       <Mechanics />
+                    </PrivateRoute>
+                  }
+                />
+                <Route
+                  path="/inspectors"
+                  element={
+                    <PrivateRoute>
+                      <Inspectors />
                     </PrivateRoute>
                   }
                 />

@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react'
-import { styled } from 'baseui'
 import { Link } from 'react-router-dom'
 import { fetchCustomers, createCustomer, Customer } from '../services/api'
 import { CreateCustomerModal } from '../components/CreateCustomerModal'
