@@ -1,11 +1,11 @@
 """
 Mechanic routes for SkyMechanics Platform.
-Handles mechanic creation, listing, and profile management.
+Handles mechanic creation, listing, profile management, certifications, and reputation.
 """
 from fastapi import APIRouter, HTTPException, Depends, Request
 from pydantic import ValidationError
-from typing import Optional
-from datetime import datetime
+from typing import Optional, List
+from datetime import datetime, date
 
 from onboarding import (
     db_client,
