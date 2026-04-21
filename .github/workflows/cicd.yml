@@ -97,28 +97,30 @@ jobs:
         push: true
         tags: ghcr.io/gaineyllc/invoice-service:latest
 
-  # deploy: disabled until KUBECONFIG secret is added
-  # needs: build
-  # runs-on: ubuntu-latest
-  # if: github.ref == 'refs/heads/master'
-  # steps:
-    - uses: actions/checkout@v4
+  # deploy: temporarily disabled - waiting for KUBECONFIG secret
+  # to re-enable, remove the commented block and add secrets.KUBECONFIG
+  # deploy:
+  #   needs: build
+  #   runs-on: ubuntu-latest
+  #   if: github.ref == 'refs/heads/master'
+  #   steps:
+  #   - uses: actions/checkout@v4
 
-    - name: Configure kubectl
-      uses: azure/k8s-set-context@v3
-      with:
-        method: kubeconfig
-        kubeconfig: ${{ secrets.KUBECONFIG }}
+  #   - name: Configure kubectl
+  #     uses: azure/k8s-set-context@v3
+  #     with:
+  #       method: kubeconfig
+  #       kubeconfig: ${{ secrets.KUBECONFIG }}
 
-    - name: Deploy to Kubernetes
-      run: |
-        kubectl apply -f k8s/dev/namespace.yaml
-        kubectl apply -f k8s/dev/
+  #   - name: Deploy to Kubernetes
+  #     run: |
+  #       kubectl apply -f k8s/dev/namespace.yaml
+  #       kubectl apply -f k8s/dev/
 
-    - name: Verify deployment
-      run: |
-        kubectl wait --for=condition=available deployment/auth-service --timeout=120s -n skymechanics || (kubectl describe deployment auth-service -n skymechanics && exit 1)
-        kubectl wait --for=condition=available deployment/mechanics-service --timeout=120s -n skymechanics || (kubectl describe deployment mechanics-service -n skymechanics && exit 1)
-        kubectl wait --for=condition=available deployment/jobs-service --timeout=120s -n skymechanics || (kubectl describe deployment jobs-service -n skymechanics && exit 1)
-        kubectl wait --for=condition=available deployment/analytics-service --timeout=120s -n skymechanics || (kubectl describe deployment analytics-service -n skymechanics && exit 1)
-        kubectl wait --for=condition=available deployment/gateway-service --timeout=120s -n skymechanics || (kubectl describe deployment gateway-service -n skymechanics && exit 1)
+  #   - name: Verify deployment
+  #     run: |
+  #       kubectl wait --for=condition=available deployment/auth-service --timeout=120s -n skymechanics || (kubectl describe deployment auth-service -n skymechanics && exit 1)
+  #       kubectl wait --for=condition=available deployment/mechanics-service --timeout=120s -n skymechanics || (kubectl describe deployment mechanics-service -n skymechanics && exit 1)
+  #       kubectl wait --for=condition=available deployment/jobs-service --timeout=120s -n skymechanics || (kubectl describe deployment jobs-service -n skymechanics && exit 1)
+  #       kubectl wait --for=condition=available deployment/analytics-service --timeout=120s -n skymechanics || (kubectl describe deployment analytics-service -n skymechanics && exit 1)
+  #       kubectl wait --for=condition=available deployment/gateway-service --timeout=120s -n skymechanics || (kubectl describe deployment gateway-service -n skymechanics && exit 1)
