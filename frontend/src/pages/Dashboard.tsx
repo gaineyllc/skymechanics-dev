@@ -1,29 +1,29 @@
 import React from 'react'
-import { Card, styled as baseStyled } from 'baseui'
+import { styled } from '../utils/styled'
 
-const CardContainer = baseStyled('div', {
+const CardContainer = styled('div', {
   backgroundColor: '#ffffff',
   borderRadius: '12px',
   padding: '24px',
   boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
 })
 
-const CardHeader = baseStyled('div', {
+const CardHeader = styled('div', {
   marginBottom: '16px',
 })
 
-const CardTitle = baseStyled('h3', {
+const CardTitle = styled('h3', {
   margin: 0,
   fontSize: '18px',
   fontWeight: '600',
   color: '#1a1a1a',
 })
 
-const CardBody = baseStyled('div', {
+const CardBody = styled('div', {
   color: '#333333',
 })
 
-const CardFooter = baseStyled('div', {
+const CardFooter = styled('div', {
   marginTop: '16px',
   paddingTop: '16px',
   borderTop: '1px solid #e0e0e0',

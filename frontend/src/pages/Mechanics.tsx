@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react'
+import { styled } from '../utils/styled'
 import { fetchMechanics, createMechanic, Mechanic, getMechanic } from '../services/api'
 import { CreateMechanicModal } from '../components/CreateMechanicModal'
 import { MechanicsDetailModal } from '../components/MechanicsDetailModal'

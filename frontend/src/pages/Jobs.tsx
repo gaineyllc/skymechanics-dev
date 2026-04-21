@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
+import { styled } from '../utils/styled'
 import { fetchJobs, createJob, Job } from '../services/api'
 import { CreateJobModal } from '../components/CreateJobModal'
 

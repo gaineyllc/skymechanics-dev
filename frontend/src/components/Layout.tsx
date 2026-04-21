@@ -1,76 +1,155 @@
 import React from 'react'
 import { useLocation, Link } from 'react-router-dom'
-import { styled } from 'baseui'
 import { ChevronDown, ChevronUp } from 'baseui/icon'
 
-const SidebarContainer = styled('div', {
-  backgroundColor: '#1a1a1a',
-  height: '100vh',
-  padding: '20px',
-  position: 'fixed',
-  left: 0,
-  top: 0,
-  width: '250px',
-  overflowY: 'auto',
-}, ({ $layoutTestId }) => ($layoutTestId ? { 'data-testid': $layoutTestId } : {}))
+const SidebarContainer = ({ children, ...props }: { children: React.ReactNode } & React.HTMLAttributes<HTMLDivElement>) => (
+  <div
+    style={{
+      backgroundColor: '#1a1a1a',
+      height: '100vh',
+      padding: '20px',
+      position: 'fixed',
+      left: 0,
+      top: 0,
+      width: '250px',
+      overflowY: 'auto',
+      ...props.style,
+    }}
+    {...props}
+  >
+    {children}
+  </div>
+)
 
-const SidebarItem = styled(Link, {
-  display: 'flex',
-  alignItems: 'center',
-  padding: '12px 16px',
-  textDecoration: 'none',
-  color: '#ffffff',
-  borderRadius: '8px',
-  marginBottom: '8px',
-  transition: 'background-color 0.2s',
+const SidebarItem = ({ to, children, ...props }: { to: string; children: React.ReactNode } & React.AnchorHTMLAttributes<HTMLAnchorElement>) => (
+  <a
+    href={to}
+    style={{
+      display: 'flex',
+      alignItems: 'center',
+      padding: '12px 16px',
+      textDecoration: 'none',
+      color: '#ffffff',
+      borderRadius: '8px',
+      marginBottom: '8px',
+      transition: 'background-color 0.2s',
+      ...props.style,
+    }}
+    {...props}
+  >
+    {children}
+  </a>
+)
 
-  '&:hover': {
-    backgroundColor: '#333333',
-  },
-})
+const ActiveItem = ({ to, children, ...props }: { to: string; children: React.ReactNode } & React.AnchorHTMLAttributes<HTMLAnchorElement>) => (
+  <a
+    href={to}
+    style={{
+      display: 'flex',
+      alignItems: 'center',
+      padding: '12px 16px',
+      textDecoration: 'none',
+      color: '#ffffff',
+      borderRadius: '8px',
+      marginBottom: '8px',
+      transition: 'background-color 0.2s',
+      backgroundColor: '#007AFF',
+      ...props.style,
+    }}
+    {...props}
+  >
+    {children}
+  </a>
+)
 
-const ActiveItem = styled(SidebarItem, {
-  backgroundColor: '#007AFF',
-})
+const ContentContainer = ({ children, ...props }: { children: React.ReactNode } & React.HTMLAttributes<HTMLDivElement>) => (
+  <div
+    style={{
+      marginLeft: '270px',
+      padding: '20px',
+      minHeight: '100vh',
+      ...props.style,
+    }}
+    {...props}
+  >
+    {children}
+  </div>
+)
 
-const ContentContainer = styled('div', {
-  marginLeft: '270px',
-  padding: '20px',
-  minHeight: '100vh',
-})
+const Header = ({ children, ...props }: { children: React.ReactNode } & React.HTMLAttributes<HTMLDivElement>) => (
+  <div
+    style={{
+      marginBottom: '24px',
+      ...props.style,
+    }}
+    {...props}
+  >
+    {children}
+  </div>
+)
 
-const Header = styled('div', {
-  marginBottom: '24px',
-})
+const NavGroup = ({ children, ...props }: { children: React.ReactNode } & React.HTMLAttributes<HTMLDivElement>) => (
+  <div
+    style={{
+      marginBottom: '16px',
+      ...props.style,
+    }}
+    {...props}
+  >
+    {children}
+  </div>
+)
 
-const NavGroup = styled('div', {
-  marginBottom: '16px',
-})
+const NavLabel = ({ children, ...props }: { children: React.ReactNode } & React.HTMLAttributes<HTMLDivElement>) => (
+  <div
+    style={{
+      fontSize: '14px',
+      fontWeight: 'bold',
+      color: '#999999',
+      marginBottom: '8px',
+      ...props.style,
+    }}
+    {...props}
+  >
+    {children}
+  </div>
+)
 
-const NavLabel = styled('div', {
-  fontSize: '14px',
-  fontWeight: 'bold',
-  color: '#999999',
-  marginBottom: '8px',
-})
+const DisclosureContainer = ({ children, ...props }: { children: React.ReactNode } & React.HTMLAttributes<HTMLDivElement>) => (
+  <div
+    style={{
+      marginTop: 'auto',
+      ...props.style,
+    }}
+    {...props}
+  >
+    {children}
+  </div>
+)
 
-const DisclosureContainer = styled('div', {
-  marginTop: 'auto',
-})
-
-const DisclosureHeader = styled('div', {
-  marginBottom: '8px',
-})
+const DisclosureHeader = ({ children, ...props }: { children: React.ReactNode } & React.HTMLAttributes<HTMLDivElement>) => (
+  <div
+    style={{
+      marginBottom: '8px',
+      ...props.style,
+    }}
+    {...props}
+  >
+    {children}
+  </div>
+)
 
 export function Layout({ children }: { children: React.ReactNode }) {
   const location = useLocation()
   const [isExpanded, setIsExpanded] = React.useState(false)
 
   const navItems = [
-    { path: '/', label: 'Dashboard' },
+    { path: '/dashboard', label: 'Dashboard' },
     { path: '/jobs', label: 'Jobs' },
     { path: '/customers', label: 'Customers' },
     { path: '/mechanics', label: 'Mechanics' },
+    { path: '/inspectors', label: 'Inspectors' },
+    { path: '/aircraft', label: 'Aircraft' },
   ]
 
   const adminItems = [
