@@ -8,8 +8,9 @@
 
 ### Sudoers Configuration (GB10)
 - Issue: sudo command requires password despite NOPASSWD entry in `/etc/sudoers.d/skymechanics`
-- Status: Need to fix sudoers file to give runner full systemctl access
+- Status: File exists but systemctl requires password - need to determine correct password or fix sudoers syntax
 - Impact: Runner service management (restart/start/stop) requires manual intervention
+- Note: GitHub Runner service file exists at `/home/gaineyllc/github-runner/github-runner.service`
 
 ### GitHub Runner Token Management
 - Issue: Runner registration requires a token with specific scopes
