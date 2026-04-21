@@ -16,7 +16,7 @@ test.describe('SkyMechanics Frontend', () => {
       })
     })
 
-    await page.goto('http://localhost:3102');
+    await page.goto('http://localhost:3103');
     
     console.log('Requests made:', JSON.stringify(requests, null, 2))
     
