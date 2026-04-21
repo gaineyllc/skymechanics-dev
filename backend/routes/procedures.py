@@ -25,7 +25,7 @@ from models import (
 )
 
 router = APIRouter(
-    prefix="/api/v1",
+    prefix="",
     tags=["Procedures"]
 )
 

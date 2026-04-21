@@ -241,6 +241,15 @@ export const getProcedure = async (id: number): Promise<ProcedureTemplate> => {
   return response.data
 }
 
+export const updateProcedure = async (id: number, data: Partial<ProcedureTemplate>): Promise<ProcedureTemplate> => {
+  const response = await api.put(`/config/procedures/${id}`, data)
+  return response.data
+}
+
+export const deleteProcedure = async (id: number): Promise<void> => {
+  await api.delete(`/config/procedures/${id}`)
+}
+
 // Tasks
 export const fetchTasks = async (procedureId?: number): Promise<TaskTemplate[]> => {
   const params = new URLSearchParams()
@@ -259,6 +268,15 @@ export const getTask = async (id: number): Promise<TaskTemplate> => {
   return response.data
 }
 
+export const updateTask = async (id: number, data: Partial<TaskTemplate>): Promise<TaskTemplate> => {
+  const response = await api.put(`/config/tasks/${id}`, data)
+  return response.data
+}
+
+export const deleteTask = async (id: number): Promise<void> => {
+  await api.delete(`/config/tasks/${id}`)
+}
+
 // Tools
 export const fetchTools = async (category?: string): Promise<Tool[]> => {
   const params = new URLSearchParams()
@@ -275,6 +293,15 @@ export const createTool = async (data: Partial<Tool>): Promise<Tool> => {
 export const getTool = async (id: number): Promise<Tool> => {
   const response = await api.get(`/config/tools/${id}`)
   return response.data
+}
+
+export const updateTool = async (id: number, data: Partial<Tool>): Promise<Tool> => {
+  const response = await api.put(`/config/tools/${id}`, data)
+  return response.data
+}
+
+export const deleteTool = async (id: number): Promise<void> => {
+  await api.delete(`/config/tools/${id}`)
 }
 
 // Parts
@@ -296,6 +323,15 @@ export const getPart = async (id: number): Promise<Part> => {
   return response.data
 }
 
+export const updatePart = async (id: number, data: Partial<Part>): Promise<Part> => {
+  const response = await api.put(`/config/parts/${id}`, data)
+  return response.data
+}
+
+export const deletePart = async (id: number): Promise<void> => {
+  await api.delete(`/config/parts/${id}`)
+}
+
 // Aircraft Types
 export const fetchAircraftTypes = async (): Promise<AircraftType[]> => {
   const response = await api.get('/config/aircraft-types')
@@ -310,6 +346,15 @@ export const createAircraftType = async (data: Partial<AircraftType>): Promise<A
 export const getAircraftType = async (id: number): Promise<AircraftType> => {
   const response = await api.get(`/config/aircraft-types/${id}`)
   return response.data
+}
+
+export const updateAircraftType = async (id: number, data: Partial<AircraftType>): Promise<AircraftType> => {
+  const response = await api.put(`/config/aircraft-types/${id}`, data)
+  return response.data
+}
+
+export const deleteAircraftType = async (id: number): Promise<void> => {
+  await api.delete(`/config/aircraft-types/${id}`)
 }
 
 // FAA Documentation Import
