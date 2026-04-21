@@ -13,6 +13,7 @@ from .events import (
 )
 from .tenants import router as tenants_router
 from .auth import router as auth_router
+from .reputation import router as reputation_router
 
 __all__ = [
     'onboarding_router', 
@@ -26,5 +27,6 @@ __all__ = [
     'websocket_router', 
     'publish_event',
     'tenants_router',
-    'auth_router'
+    'auth_router',
+    'reputation_router'
 ]
