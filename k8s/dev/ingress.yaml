@@ -59,6 +59,34 @@ spec:
         pathType: Prefix
       - backend:
           service:
+            name: aircraft-service
+            port:
+              number: 8208
+        path: /api/aircraft
+        pathType: Prefix
+      - backend:
+          service:
+            name: parts-service
+            port:
+              number: 8205
+        path: /api/parts
+        pathType: Prefix
+      - backend:
+          service:
+            name: notification-service
+            port:
+              number: 8206
+        path: /api/notifications
+        pathType: Prefix
+      - backend:
+          service:
+            name: invoice-service
+            port:
+              number: 8207
+        path: /api/invoices
+        pathType: Prefix
+      - backend:
+          service:
             name: auth-service
             port:
               number: 8200
