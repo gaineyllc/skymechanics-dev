@@ -9,3 +9,11 @@ export { CreateCustomerModal } from './CreateCustomerModal'
 export { CreateJobModal } from './CreateJobModal'
 export { CreateMechanicModal } from './CreateMechanicModal'
 export { QuickStartWizard } from './QuickStartWizard'
+export { 
+  RepScoreBadge, 
+  RepBreakdownCard, 
+  CertificationsList, 
+  ExperienceTimeline, 
+  ReputationMetricsCard 
+} from './ReputationMetrics'
+export { MechanicProfileCard } from './MechanicProfile'
