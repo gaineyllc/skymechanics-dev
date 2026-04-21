@@ -11,6 +11,8 @@ from .events import (
     websocket_router,
     publish_event
 )
+from .tenants import router as tenants_router
+from .auth import router as auth_router
 
 __all__ = [
     'onboarding_router', 
@@ -22,5 +24,7 @@ __all__ = [
     'procedures_router',
     'events_router', 
     'websocket_router', 
-    'publish_event'
+    'publish_event',
+    'tenants_router',
+    'auth_router'
 ]

@@ -34,6 +34,8 @@ from routes import (
     users as users_router,
     events as events_router,
     procedures as procedures_router,
+    tenants as tenants_router,
+    auth as auth_router,
 )
 
 # Import models for Alembic autogenerate support
@@ -85,6 +87,8 @@ app.include_router(mechanics_router.router, prefix="/api/v1", tags=["mechanics"]
 app.include_router(jobs_router.router, prefix="/api/v1", tags=["jobs"])
 app.include_router(events_router.router, prefix="/api/v1", tags=["events"])
 app.include_router(procedures_router.router, prefix="/api/v1", tags=["procedures"])
+app.include_router(tenants_router.router, prefix="/api/v1", tags=["tenants"])
+app.include_router(auth_router.router, prefix="/api/v1", tags=["auth"])
 
 
 if __name__ == "__main__":
