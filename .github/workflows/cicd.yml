@@ -1,4 +1,5 @@
 # GitHub Actions Workflow for SkyMechanics
+# Updated 2026-04-21 15:21: Added GHCR_PAT secret for registry push
 
 name: CI/CD Pipeline
 
