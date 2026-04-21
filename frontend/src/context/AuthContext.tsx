@@ -5,23 +5,28 @@ interface User {
   id: string
   email: string
   name: string
-  role: 'admin' | 'mechanic' | 'customer'
+  role: 'admin' | 'mechanic' | 'customer' | 'inspector'
+  aircraft_ids?: string[]
 }
 
 interface AuthContextType {
   user: User | null
-  login: (email: string) => void
+  login: (email: string, password?: string) => Promise<boolean>
   logout: () => void
   isAuthenticated: boolean
+  loading: boolean
+  error: string | null
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
-const API_BASE_URL = 'http://localhost:8080'
+const API_BASE_URL = 'http://localhost:8200'
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
   const [token, setToken] = useState<string | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
     const storedToken = localStorage.getItem('authToken')
@@ -31,24 +36,33 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setToken(storedToken)
       setUser(JSON.parse(storedUser))
     }
+    setLoading(false)
   }, [])
 
-  const login = (email: string) => {
-    // Simulated login - will be replaced with actual API call
-    const mockUser: User = {
-      id: '1',
-      email,
-      name: 'Test User',
-      role: 'admin',
+  const login = async (email: string, password?: string): Promise<boolean> => {
+    try {
+      setError(null)
+      setLoading(true)
+      
+      const response = await axios.post(`${API_BASE_URL}/api/auth/login`, {
+        email,
+        password: password || 'default',
+      })
+      
+      const { token, user } = response.data
+      
+      setToken(token)
+      setUser(user)
+      localStorage.setItem('authToken', token)
+      localStorage.setItem('user', JSON.stringify(user))
+      
+      setLoading(false)
+      return true
+    } catch (err: any) {
+      setError(err.response?.data?.message || 'Login failed')
+      setLoading(false)
+      return false
     }
-    
-    const mockToken = 'mock-jwt-token'
-    
-    setUser(mockUser)
-    setToken(mockToken)
-    
-    localStorage.setItem('authToken', mockToken)
-    localStorage.setItem('user', JSON.stringify(mockUser))
   }
 
   const logout = () => {
@@ -59,7 +73,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <AuthContext.Provider value={{ user, login, logout, isAuthenticated: !!user }}>
+    <AuthContext.Provider value={{ user, login, logout, isAuthenticated: !!user, loading, error }}>
       {children}
     </AuthContext.Provider>
   )
