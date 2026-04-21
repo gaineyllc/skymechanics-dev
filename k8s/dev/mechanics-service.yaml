@@ -14,10 +14,11 @@ spec:
       labels:
         app: mechanics-service
     spec:
+      serviceAccountName: skymechanics-sa
       containers:
       - name: mechanics-service
         image: ghcr.io/gaineyllc/mechanics-service:latest
-        imagePullPolicy: Never
+        imagePullPolicy: Always
         ports:
         - containerPort: 8201
         env:

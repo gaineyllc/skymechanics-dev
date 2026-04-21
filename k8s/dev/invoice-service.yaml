@@ -1,3 +1,4 @@
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -13,20 +14,34 @@ spec:
       labels:
         app: invoice-service
     spec:
+      serviceAccountName: skymechanics-sa
       containers:
       - name: invoice-service
         image: ghcr.io/gaineyllc/invoice-service:latest
+        imagePullPolicy: Always
         ports:
-        - containerPort: 8207
+        - containerPort: 8208
         env:
+        - name: PORT
+          value: "8208"
         - name: FALKORDB_HOST
-          value: "falkordb"
+          value: "skymechanics-falkordb"
         - name: FALKORDB_PORT
           value: "6379"
-        - name: PORT
-          value: "8207"
-        - name: MULTI_TENANCY_ENABLED
-          value: "true"
+        - name: FALKORDB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: skymechanics-secrets
+              key: FALKORDB_PASSWORD
+        - name: POSTGRES_HOST
+          value: "skymechanics-postgres"
+        - name: POSTGRES_PORT
+          value: "5432"
+        - name: POSTGRES_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: skymechanics-secrets
+              key: POSTGRES_PASSWORD
         resources:
           requests:
             memory: "128Mi"
@@ -36,14 +51,14 @@ spec:
             cpu: "500m"
         livenessProbe:
           httpGet:
-            path: /api/v1/health
-            port: 8207
+            path: /
+            port: 8208
           initialDelaySeconds: 30
           periodSeconds: 10
         readinessProbe:
           httpGet:
-            path: /api/v1/health
-            port: 8207
+            path: /
+            port: 8208
           initialDelaySeconds: 5
           periodSeconds: 5
 ---
@@ -56,6 +71,6 @@ spec:
   selector:
     app: invoice-service
   ports:
-  - port: 8207
-    targetPort: 8207
+  - port: 8208
+    targetPort: 8208
   type: ClusterIP

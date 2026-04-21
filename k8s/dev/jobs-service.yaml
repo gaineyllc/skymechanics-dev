@@ -14,10 +14,11 @@ spec:
       labels:
         app: jobs-service
     spec:
+      serviceAccountName: skymechanics-sa
       containers:
       - name: jobs-service
         image: ghcr.io/gaineyllc/jobs-service:latest
-        imagePullPolicy: Never
+        imagePullPolicy: Always
         ports:
         - containerPort: 8202
         env:
@@ -27,10 +28,20 @@ spec:
           value: "skymechanics-falkordb"
         - name: FALKORDB_PORT
           value: "6379"
-        - name: REDIS_HOST
-          value: "skymechanics-redis"
-        - name: REDIS_PORT
-          value: "6379"
+        - name: FALKORDB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: skymechanics-secrets
+              key: FALKORDB_PASSWORD
+        - name: POSTGRES_HOST
+          value: "skymechanics-postgres"
+        - name: POSTGRES_PORT
+          value: "5432"
+        - name: POSTGRES_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: skymechanics-secrets
+              key: POSTGRES_PASSWORD
         resources:
           requests:
             memory: "128Mi"
