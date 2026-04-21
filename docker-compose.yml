@@ -52,7 +52,7 @@ services:
       - falkordb
     restart: unless-stopped
 
-  # FastAPI Backend
+  # FastAPI Backend (monolithic fallback)
   api:
     build:
       context: ./backend
@@ -84,6 +84,170 @@ services:
     container_name: skymechanics-frontend
     ports:
       - "3003:3000"
+    restart: unless-stopped
+
+  # Auth Service
+  auth-service:
+    build:
+      context: ./services/auth-service
+      dockerfile: Dockerfile
+    container_name: skymechanics-auth-service
+    ports:
+      - "8200:8200"
+    environment:
+      - FALKORDB_HOST=falkordb
+      - FALKORDB_PORT=6379
+      - PORT=8200
+      - MULTI_TENANCY_ENABLED=true
+    depends_on:
+      - falkordb
+      - redis
+    restart: unless-stopped
+
+  # Mechanics Service
+  mechanics-service:
+    build:
+      context: ./services/mechanics-service
+      dockerfile: Dockerfile
+    container_name: skymechanics-mechanics-service
+    ports:
+      - "8201:8201"
+    environment:
+      - FALKORDB_HOST=falkordb
+      - FALKORDB_PORT=6379
+      - PORT=8201
+      - MULTI_TENANCY_ENABLED=true
+    depends_on:
+      - falkordb
+      - redis
+    restart: unless-stopped
+
+  # Jobs Service
+  jobs-service:
+    build:
+      context: ./services/jobs-service
+      dockerfile: Dockerfile
+    container_name: skymechanics-jobs-service
+    ports:
+      - "8202:8202"
+    environment:
+      - FALKORDB_HOST=falkordb
+      - FALKORDB_PORT=6379
+      - PORT=8202
+      - MULTI_TENANCY_ENABLED=true
+    depends_on:
+      - falkordb
+      - redis
+    restart: unless-stopped
+
+  # Analytics Service
+  analytics-service:
+    build:
+      context: ./services/analytics-service
+      dockerfile: Dockerfile
+    container_name: skymechanics-analytics-service
+    ports:
+      - "8203:8203"
+    environment:
+      - FALKORDB_HOST=falkordb
+      - FALKORDB_PORT=6379
+      - PORT=8203
+      - MULTI_TENANCY_ENABLED=true
+    depends_on:
+      - falkordb
+      - redis
+    restart: unless-stopped
+
+  # Gateway Service
+  gateway-service:
+    build:
+      context: ./services/gateway-service
+      dockerfile: Dockerfile
+    container_name: skymechanics-gateway-service
+    ports:
+      - "8204:8204"
+    environment:
+      - FALKORDB_HOST=falkordb
+      - FALKORDB_PORT=6379
+      - PORT=8204
+      - MULTI_TENANCY_ENABLED=true
+    depends_on:
+      - falkordb
+      - redis
+    restart: unless-stopped
+
+  # Aircraft Service
+  aircraft-service:
+    build:
+      context: ./services/aircraft-service
+      dockerfile: Dockerfile
+    container_name: skymechanics-aircraft-service
+    ports:
+      - "8208:8208"
+    environment:
+      - FALKORDB_HOST=falkordb
+      - FALKORDB_PORT=6379
+      - PORT=8208
+      - MULTI_TENANCY_ENABLED=true
+    depends_on:
+      - falkordb
+      - redis
+    restart: unless-stopped
+
+  # Parts Service
+  parts-service:
+    build:
+      context: ./services/parts-service
+      dockerfile: Dockerfile
+    container_name: skymechanics-parts-service
+    ports:
+      - "8205:8205"
+    environment:
+      - FALKORDB_HOST=falkordb
+      - FALKORDB_PORT=6379
+      - PORT=8205
+      - MULTI_TENANCY_ENABLED=true
+    depends_on:
+      - falkordb
+      - redis
+    restart: unless-stopped
+
+  # Notification Service
+  notification-service:
+    build:
+      context: ./services/notification-service
+      dockerfile: Dockerfile
+    container_name: skymechanics-notification-service
+    ports:
+      - "8206:8206"
+    environment:
+      - FALKORDB_HOST=falkordb
+      - FALKORDB_PORT=6379
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - PORT=8206
+      - MULTI_TENANCY_ENABLED=true
+    depends_on:
+      - falkordb
+      - redis
+    restart: unless-stopped
+
+  # Invoice Service
+  invoice-service:
+    build:
+      context: ./services/invoice-service
+      dockerfile: Dockerfile
+    container_name: skymechanics-invoice-service
+    ports:
+      - "8207:8207"
+    environment:
+      - FALKORDB_HOST=falkordb
+      - FALKORDB_PORT=6379
+      - PORT=8207
+      - MULTI_TENANCY_ENABLED=true
+    depends_on:
+      - falkordb
+      - redis
     restart: unless-stopped
 
 volumes:
