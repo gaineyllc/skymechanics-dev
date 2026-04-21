@@ -185,13 +185,18 @@ class WebSocketClient {
 |-------|---------|--------|
 | 8000 | vLLM (Qwen3-Coder-Next-FP8) | Reserved |
 | 8200 | auth-service | Active |
-| 8201 | mechanics-service | Ready |
-| 8202 | jobs-service | Ready |
-| 8203 | analytics-service | Ready |
-| 8204 | gateway-service | Ready |
+| 8201 | mechanics-service | Active |
+| 8202 | jobs-service | Active |
+| 8203 | analytics-service | Active |
+| 8204 | gateway-service | Active |
+| 8205 | parts-service | Built |
+| 8206 | notification-service | Built |
+| 8207 | invoice-service | Built |
+| 8208 | aircraft-service | Built |
 | 3000-3099 | Frontend services | React (3003) |
 | 5432 | PostgreSQL | Auth service |
 | 6379 | FalkorDB/Redis | Active |
+| 6380 | Redis Stack (RedisInsight) | Active |
 | 9000/8123 | ClickHouse | Active |
 | 9090-9199 | Monitoring | Prometheus (9090), AlertManager (9093) |
 | 30000-32767 | Kubernetes NodePort | Not used |
@@ -201,7 +206,7 @@ class WebSocketClient {
 ### Start all services
 ```bash
 # Terminal 1: Start auth service
-cd backend && uvicorn main:app --host 0.0.0.0 --port 8200
+cd services/auth-service && uvicorn main:app --host 0.0.0.0 --port 8200
 
 # Terminal 2: Start mechanics service
 cd services/mechanics-service && uvicorn main:app --host 0.0.0.0 --port 8201
@@ -214,6 +219,18 @@ cd services/analytics-service && uvicorn main:app --host 0.0.0.0 --port 8203
 
 # Terminal 5: Start gateway service
 cd services/gateway-service && uvicorn main:app --host 0.0.0.0 --port 8204
+
+# Terminal 6: Start aircraft service
+cd services/aircraft-service && uvicorn main:app --host 0.0.0.0 --port 8208
+
+# Terminal 7: Start parts service
+cd services/parts-service && uvicorn main:app --host 0.0.0.0 --port 8205
+
+# Terminal 8: Start notification service
+cd services/notification-service && uvicorn main:app --host 0.0.0.0 --port 8206
+
+# Terminal 9: Start invoice service
+cd services/invoice-service && uvicorn main:app --host 0.0.0.0 --port 8207
 ```
 
 ### Start with Docker
@@ -224,19 +241,49 @@ docker run -d -p 6379:6379 --name redis redis:7-alpine
 # FalkorDB
 docker run -d -p 6379:6379 -p 3000:3000 --name falkordb falkordb/falkordb:latest
 
-# Auth service
-docker run -d -p 8200:8200 --env PORT=8200 ghcr.io/gaineyllc/auth-service:latest
+# Using Docker Compose (recommended)
+cd /path/to/skymechanics-dev
+docker-compose up -d
 
-# Analytics service (requires ClickHouse)
-docker run -d -p 8203:8203 \
-  --env PORT=8203 \
-  --env CLICKHOUSE_HOST=localhost \
-  ghcr.io/gaineyllc/analytics-service:latest
+# Or build and run specific services
+docker-compose build auth-service mechanics-service jobs-service analytics-service gateway-service
+docker-compose up -d auth-service mechanics-service jobs-service analytics-service gateway-service
 
-# ClickHouse
-cd services/clickhouse
+## Running All Services with Docker Compose
+
+**Start all services (including new services):**
+```bash
+cd /path/to/skymechanics-dev
 docker-compose up -d
 ```
+
+**View logs:**
+```bash
+docker-compose logs -f
+```
+
+**Stop all services:**
+```bash
+docker-compose down
+```
+
+**Stop and remove volumes:**
+```bash
+docker-compose down -v
+```
+
+**Services available:**
+| Service | Port | Status |
+|---------|------|--------|
+| auth-service | 8200 | Built |
+| mechanics-service | 8201 | Built |
+| jobs-service | 8202 | Built |
+| analytics-service | 8203 | Built |
+| gateway-service | 8204 | Built |
+| aircraft-service | 8208 | Built |
+| parts-service | 8205 | Built |
+| notification-service | 8206 | Built |
+| invoice-service | 8207 | Built |
 
 ## Mobile App
 
