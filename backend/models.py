@@ -134,6 +134,16 @@ class MechanicCreateRequest(BaseModel):
     specialties: List[str] = Field(default_factory=list)
 
 
+class MechanicResponse(BaseModel):
+    """Response for mechanic operations."""
+    mechanic_id: int
+    name: str
+    email: str
+    phone: Optional[str]
+    specialties: List[str]
+    created_at: datetime
+
+
 # ========== Onboarding / User Role Models ==========
 
 class UserCreateRequest(BaseModel):
@@ -304,6 +314,110 @@ class AircraftTypeResponse(BaseModel):
     ipc_ref: Optional[str]
     created_at: datetime
     updated_at: datetime
+
+
+# ========== Reputation System Models ==========
+
+class CertificationCreateRequest(BaseModel):
+    """Request to create a certification for a mechanic."""
+    name: str = Field(..., description="Certification name (e.g., 'A&P Mechanic', 'IA')")
+    authority: str = Field(..., description="Issuing authority (e.g., 'FAA')")
+    certification_id: Optional[str] = Field(None, description="Certification number")
+    issue_date: Optional[str] = Field(None, description="ISO date of issuance")
+    expiry_date: Optional[str] = Field(None, description="ISO date of expiration")
+    status: str = Field(default="active", description="Status: 'active', 'expired', 'revoked'")
+    notes: Optional[str] = Field(None, description="Additional notes")
+
+class CertificationResponse(BaseModel):
+    """Response for certification operations."""
+    certification_id: int
+    name: str
+    authority: str
+    certification_id_num: Optional[str]
+    issue_date: Optional[str]
+    expiry_date: Optional[str]
+    status: str
+    notes: Optional[str]
+    created_at: datetime
+
+class RepairmanCertificateCreateRequest(BaseModel):
+    """Request to create a repairman certificate."""
+    name: str = Field(..., description="Certificate name (e.g., 'Repairman - Experimental')")
+    category: str = Field(..., description="Category: 'general', 'experimental_builder', 'light_sport')")
+    issue_date: str = Field(..., description="ISO date of issuance")
+    expiry_date: Optional[str] = Field(None, description="ISO date of expiration")
+    status: str = Field(default="active", description="Status: 'active', 'expired', 'revoked'")
+
+class RepairmanCertificateResponse(BaseModel):
+    """Response for repairman certificate operations."""
+    certificate_id: int
+    name: str
+    category: str
+    issue_date: str
+    expiry_date: Optional[str]
+    status: str
+    created_at: datetime
+
+class ExperienceRecordCreateRequest(BaseModel):
+    """Request to create an experience record."""
+    aircraft_type_id: int = Field(..., description="Aircraft type ID")
+    hours_flown: int = Field(..., description="Total flight hours on this type")
+    years_active: int = Field(default=0, description="Years of experience")
+    last_flight_date: Optional[str] = Field(None, description="ISO date of last flight")
+    notes: Optional[str] = Field(None, description="Experience notes")
+
+class ExperienceRecordResponse(BaseModel):
+    """Response for experience record operations."""
+    experience_id: int
+    aircraft_type_id: int
+    hours_flown: int
+    years_active: int
+    last_flight_date: Optional[str]
+    notes: Optional[str]
+    created_at: datetime
+
+class ReviewCreateRequest(BaseModel):
+    """Request to create a mechanic review."""
+    job_id: int = Field(..., description="Job ID being reviewed")
+    rating: int = Field(..., ge=1, le=5, description="Rating 1-5")
+    comment: Optional[str] = Field(None, description="Review comment")
+    review_type: str = Field(default="customer", description="Type: 'customer', 'peer', 'supervisor'")
+
+class ReviewResponse(BaseModel):
+    """Response for review operations."""
+    review_id: int
+    job_id: int
+    rating: int
+    comment: Optional[str]
+    review_type: str
+    created_at: datetime
+
+class SkillCreateRequest(BaseModel):
+    """Request to create a mechanic skill."""
+    name: str = Field(..., description="Skill name (e.g., 'Engine Overhaul', 'Avionics Installation')")
+    level: int = Field(default=1, ge=1, le=10, description="Skill level 1-10")
+    verified: bool = Field(default=False, description="Is this skill verified?")
+
+class SkillResponse(BaseModel):
+    """Response for skill operations."""
+    skill_id: int
+    name: str
+    level: int
+    verified: bool
+    created_at: datetime
+
+class ReputationMetrics(BaseModel):
+    """Reputation metrics for a mechanic."""
+    total_score: int = Field(..., ge=0, le=100, description="Overall reputation score 0-100")
+    component_scores: Dict[str, int] = Field(..., description="Breakdown of score components")
+    certification_status: int = Field(..., description="Component score (25% weight)")
+    experience_depth: int = Field(..., description="Component score (20% weight)")
+    performance: int = Field(..., description="Component score (30% weight)")
+    recent_activity: int = Field(..., description="Component score (15% weight)")
+    compliance: int = Field(..., description="Component score (10% weight)")
+    review_count: int = Field(default=0, description="Total number of reviews")
+    avg_rating: Optional[float] = Field(None, description="Average rating")
+    last_review_date: Optional[str] = Field(None, description="Date of most recent review")
 
 
 # ========== Response Wrappers ==========
