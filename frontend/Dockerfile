@@ -14,5 +14,8 @@ COPY . .
 
 EXPOSE 3000
 
-# Start dev server
-CMD ["npm", "run", "dev", "--", "--host", "0.0.0.0", "--port", "3000"]
+# Build the app for production
+RUN npm run build
+
+# Serve with Vite preview
+CMD ["npx", "vite", "preview", "--host", "0.0.0.0", "--port", "3000"]
