@@ -17,8 +17,8 @@ spec:
       serviceAccountName: skymechanics-sa
       containers:
       - name: analytics-service
-        image: ghcr.io/gaineyllc/analytics-service:latest
-        imagePullPolicy: Always
+        image: analytics-service:dev
+        imagePullPolicy: Never
         ports:
         - containerPort: 8203
         env:

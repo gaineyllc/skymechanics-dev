@@ -10,7 +10,7 @@ import os
 
 # Import shared models
 import sys
-sys.path.insert(0, '/app/shared')
+sys.path.insert(0, '/app')
 from models import JobCreateRequest, JobUpdateRequest, JobResponse
 
 # Configuration

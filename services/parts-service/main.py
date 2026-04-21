@@ -6,7 +6,11 @@ import structlog
 from fastapi import FastAPI
 from pydantic_settings import SettingsConfigDict
 
-from .settings import Settings
+import sys
+sys.path.insert(0, '/app/shared')
+from models import PartCreateRequest, PartResponse, PartUpdateRequest
+from db import db_settings, FalkorDBClient
+from settings import Settings
 
 logger = structlog.get_logger(__name__)
 

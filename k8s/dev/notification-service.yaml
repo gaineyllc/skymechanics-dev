@@ -17,13 +17,13 @@ spec:
       serviceAccountName: skymechanics-sa
       containers:
       - name: notification-service
-        image: ghcr.io/gaineyllc/notification-service:latest
-        imagePullPolicy: Always
+        image: notification-service:dev
+        imagePullPolicy: Never
         ports:
-        - containerPort: 8207
+        - containerPort: 8206
         env:
         - name: PORT
-          value: "8207"
+          value: "8206"
         - name: FALKORDB_HOST
           value: "skymechanics-falkordb"
         - name: FALKORDB_PORT
@@ -52,13 +52,13 @@ spec:
         livenessProbe:
           httpGet:
             path: /
-            port: 8207
+            port: 8206
           initialDelaySeconds: 30
           periodSeconds: 10
         readinessProbe:
           httpGet:
             path: /
-            port: 8207
+            port: 8206
           initialDelaySeconds: 5
           periodSeconds: 5
 ---
@@ -71,6 +71,6 @@ spec:
   selector:
     app: notification-service
   ports:
-  - port: 8207
-    targetPort: 8207
+  - port: 8206
+    targetPort: 8206
   type: ClusterIP

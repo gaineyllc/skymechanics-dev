@@ -17,8 +17,8 @@ spec:
       serviceAccountName: skymechanics-sa
       containers:
       - name: mechanics-service
-        image: ghcr.io/gaineyllc/mechanics-service:latest
-        imagePullPolicy: Always
+        image: mechanics-service:dev
+        imagePullPolicy: Never
         ports:
         - containerPort: 8201
         env:

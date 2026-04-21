@@ -17,13 +17,13 @@ spec:
       serviceAccountName: skymechanics-sa
       containers:
       - name: invoice-service
-        image: ghcr.io/gaineyllc/invoice-service:latest
-        imagePullPolicy: Always
+        image: invoice-service:dev
+        imagePullPolicy: Never
         ports:
-        - containerPort: 8208
+        - containerPort: 8207
         env:
         - name: PORT
-          value: "8208"
+          value: "8207"
         - name: FALKORDB_HOST
           value: "skymechanics-falkordb"
         - name: FALKORDB_PORT
@@ -52,13 +52,13 @@ spec:
         livenessProbe:
           httpGet:
             path: /
-            port: 8208
+            port: 8207
           initialDelaySeconds: 30
           periodSeconds: 10
         readinessProbe:
           httpGet:
             path: /
-            port: 8208
+            port: 8207
           initialDelaySeconds: 5
           periodSeconds: 5
 ---
@@ -71,6 +71,6 @@ spec:
   selector:
     app: invoice-service
   ports:
-  - port: 8208
-    targetPort: 8208
+  - port: 8207
+    targetPort: 8207
   type: ClusterIP

@@ -17,8 +17,8 @@ spec:
       serviceAccountName: skymechanics-sa
       containers:
       - name: auth-service
-        image: ghcr.io/gaineyllc/auth-service:latest
-        imagePullPolicy: Always
+        image: auth-service:dev
+        imagePullPolicy: Never
         ports:
         - containerPort: 8200
         env:

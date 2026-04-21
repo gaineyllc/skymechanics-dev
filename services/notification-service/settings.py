@@ -2,6 +2,7 @@
 Settings for SkyMechanics Notification Service.
 """
 from pydantic_settings import BaseSettings, SettingsConfigDict
+from pydantic import field_validator
 
 
 class Settings(BaseSettings):
@@ -25,10 +26,24 @@ class Settings(BaseSettings):
     FALKORDB_PASSWORD: str = ""
     FALKORDB_DATABASE_NAME: str = "falkordb"
 
-    # Redis settings
+    # Redis settings - store as string, parse in validator
     REDIS_HOST: str = "localhost"
-    REDIS_PORT: int = 6379
+    REDIS_PORT_STR: str | int = "6379"  # Union to accept both str and int
     REDIS_PASSWORD: str = ""
+
+    @field_validator("REDIS_PORT_STR", mode="before")
+    @classmethod
+    def parse_redis_port(cls, v: str | int) -> int:
+        """Parse REDIS_PORT from URL format (tcp://host:port) to int."""
+        if v is None:
+            return 6379
+        port_str = str(v)
+        if port_str.startswith("tcp://"):
+            port_str = port_str.split(":")[-1]
+        try:
+            return int(port_str)
+        except ValueError:
+            return 6379
 
     # Multi-tenancy
     MULTI_TENANCY_ENABLED: bool = True

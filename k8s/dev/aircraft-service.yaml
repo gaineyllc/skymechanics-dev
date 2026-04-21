@@ -17,8 +17,8 @@ spec:
       serviceAccountName: skymechanics-sa
       containers:
       - name: aircraft-service
-        image: ghcr.io/gaineyllc/aircraft-service:latest
-        imagePullPolicy: Always
+        image: aircraft-service:dev
+        imagePullPolicy: Never
         ports:
         - containerPort: 8205
         env:

@@ -17,13 +17,13 @@ spec:
       serviceAccountName: skymechanics-sa
       containers:
       - name: parts-service
-        image: ghcr.io/gaineyllc/parts-service:latest
-        imagePullPolicy: Always
+        image: parts-service:dev
+        imagePullPolicy: Never
         ports:
-        - containerPort: 8206
+        - containerPort: 8208
         env:
         - name: PORT
-          value: "8206"
+          value: "8208"
         - name: FALKORDB_HOST
           value: "skymechanics-falkordb"
         - name: FALKORDB_PORT
@@ -52,13 +52,13 @@ spec:
         livenessProbe:
           httpGet:
             path: /
-            port: 8206
+            port: 8208
           initialDelaySeconds: 30
           periodSeconds: 10
         readinessProbe:
           httpGet:
             path: /
-            port: 8206
+            port: 8208
           initialDelaySeconds: 5
           periodSeconds: 5
 ---
@@ -71,6 +71,6 @@ spec:
   selector:
     app: parts-service
   ports:
-  - port: 8206
-    targetPort: 8206
+  - port: 8208
+    targetPort: 8208
   type: ClusterIP

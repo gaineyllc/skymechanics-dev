@@ -18,7 +18,7 @@ spec:
       serviceAccountName: skymechanics-sa
       containers:
       - name: frontend
-        image: ghcr.io/gaineyllc/frontend:latest
+        image: frontend:dev
         imagePullPolicy: IfNotPresent
         ports:
         - containerPort: 3000
