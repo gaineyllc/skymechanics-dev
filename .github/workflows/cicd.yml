@@ -64,6 +64,38 @@ jobs:
         push: true
         tags: ghcr.io/gaineyllc/gateway-service:latest
 
+    - name: Build and push aircraft-service
+      uses: docker/build-push-action@v5
+      with:
+        context: ./services/aircraft-service
+        file: ./services/aircraft-service/Dockerfile
+        push: true
+        tags: ghcr.io/gaineyllc/aircraft-service:latest
+
+    - name: Build and push parts-service
+      uses: docker/build-push-action@v5
+      with:
+        context: ./services/parts-service
+        file: ./services/parts-service/Dockerfile
+        push: true
+        tags: ghcr.io/gaineyllc/parts-service:latest
+
+    - name: Build and push notification-service
+      uses: docker/build-push-action@v5
+      with:
+        context: ./services/notification-service
+        file: ./services/notification-service/Dockerfile
+        push: true
+        tags: ghcr.io/gaineyllc/notification-service:latest
+
+    - name: Build and push invoice-service
+      uses: docker/build-push-action@v5
+      with:
+        context: ./services/invoice-service
+        file: ./services/invoice-service/Dockerfile
+        push: true
+        tags: ghcr.io/gaineyllc/invoice-service:latest
+
   deploy:
     needs: build
     runs-on: ubuntu-latest
