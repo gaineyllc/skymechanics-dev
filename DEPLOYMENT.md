@@ -44,6 +44,10 @@ All services now use ports **8200+** to avoid conflicts with vLLM (port 8000).
 | Jobs Service | 8202 | Built |
 | Analytics Service | 8203 | Built |
 | Gateway Service | 8204 | Built |
+| Aircraft Service | 8208 | Built |
+| Parts Service | 8205 | Built |
+| Notification Service | 8206 | Built |
+| Invoice Service | 8207 | Built |
 | ClickHouse | 9000/8123 | Ready |
 
 **Docker Images Built:**
@@ -51,14 +55,24 @@ All services now use ports **8200+** to avoid conflicts with vLLM (port 8000).
 - `ghcr.io/gaineyllc/mechanics-service:latest`
 - `ghcr.io/gaineyllc/jobs-service:latest`
 - `ghcr.io/gaineyllc/analytics-service:latest`
+- `ghcr.io/gaineyllc/gateway-service:latest`
+- `ghcr.io/gaineyllc/aircraft-service:latest`
+- `ghcr.io/gaineyllc/parts-service:latest`
+- `ghcr.io/gaineyllc/notification-service:latest`
+- `ghcr.io/gaineyllc/invoice-service:latest`
 
-**To push images:**
+**To push all images:**
 ```bash
 docker login ghcr.io -u gaineyllc
 docker push ghcr.io/gaineyllc/auth-service:latest
 docker push ghcr.io/gaineyllc/mechanics-service:latest
 docker push ghcr.io/gaineyllc/jobs-service:latest
 docker push ghcr.io/gaineyllc/analytics-service:latest
+docker push ghcr.io/gaineyllc/gateway-service:latest
+docker push ghcr.io/gaineyllc/aircraft-service:latest
+docker push ghcr.io/gaineyllc/parts-service:latest
+docker push ghcr.io/gaineyllc/notification-service:latest
+docker push ghcr.io/gaineyllc/invoice-service:latest
 ```
 
 ## Phase 4 Complete ✅
@@ -91,6 +105,10 @@ npm run android  # or npm run ios
 | jobs-service | 8202 | Built |
 | analytics-service | 8203 | Built |
 | gateway-service | 8204 | Built |
+| aircraft-service | 8208 | Built |
+| parts-service | 8205 | Built |
+| notification-service | 8206 | Built |
+| invoice-service | 8207 | Built |
 | skymechanics-falkordb | 6379 | Healthy |
 | skymechanics-redis | 6379 | Running |
 | clickhouse | 9000/8123 | Ready |
