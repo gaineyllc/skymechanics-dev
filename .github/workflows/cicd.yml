@@ -27,40 +27,40 @@ jobs:
     - name: Build and push auth-service
       uses: docker/build-push-action@v5
       with:
-        context: .
-        file: services/auth-service/Dockerfile
+        context: ./services/auth-service
+        file: ./services/auth-service/Dockerfile
         push: true
         tags: ghcr.io/gaineyllc/auth-service:latest
 
     - name: Build and push mechanics-service
       uses: docker/build-push-action@v5
       with:
-        context: .
-        file: services/mechanics-service/Dockerfile
+        context: ./services/mechanics-service
+        file: ./services/mechanics-service/Dockerfile
         push: true
         tags: ghcr.io/gaineyllc/mechanics-service:latest
 
     - name: Build and push jobs-service
       uses: docker/build-push-action@v5
       with:
-        context: .
-        file: services/jobs-service/Dockerfile
+        context: ./services/jobs-service
+        file: ./services/jobs-service/Dockerfile
         push: true
         tags: ghcr.io/gaineyllc/jobs-service:latest
 
     - name: Build and push analytics-service
       uses: docker/build-push-action@v5
       with:
-        context: .
-        file: services/analytics-service/Dockerfile
+        context: ./services/analytics-service
+        file: ./services/analytics-service/Dockerfile
         push: true
         tags: ghcr.io/gaineyllc/analytics-service:latest
 
     - name: Build and push gateway-service
       uses: docker/build-push-action@v5
       with:
-        context: .
-        file: services/gateway-service/Dockerfile
+        context: ./services/gateway-service
+        file: ./services/gateway-service/Dockerfile
         push: true
         tags: ghcr.io/gaineyllc/gateway-service:latest
 
@@ -84,8 +84,8 @@ jobs:
 
     - name: Verify deployment
       run: |
-        kubectl wait --for=condition=available deployment/auth-service --timeout=120s -n skymechanics
-        kubectl wait --for=condition=available deployment/mechanics-service --timeout=120s -n skymechanics
-        kubectl wait --for=condition=available deployment/jobs-service --timeout=120s -n skymechanics
-        kubectl wait --for=condition=available deployment/analytics-service --timeout=120s -n skymechanics
-        kubectl wait --for=condition=available deployment/gateway-service --timeout=120s -n skymechanics
+        kubectl wait --for=condition=available deployment/auth-service --timeout=120s -n skymechanics || (kubectl describe deployment auth-service -n skymechanics && exit 1)
+        kubectl wait --for=condition=available deployment/mechanics-service --timeout=120s -n skymechanics || (kubectl describe deployment mechanics-service -n skymechanics && exit 1)
+        kubectl wait --for=condition=available deployment/jobs-service --timeout=120s -n skymechanics || (kubectl describe deployment jobs-service -n skymechanics && exit 1)
+        kubectl wait --for=condition=available deployment/analytics-service --timeout=120s -n skymechanics || (kubectl describe deployment analytics-service -n skymechanics && exit 1)
+        kubectl wait --for=condition=available deployment/gateway-service --timeout=120s -n skymechanics || (kubectl describe deployment gateway-service -n skymechanics && exit 1)
