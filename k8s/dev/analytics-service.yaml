@@ -5,7 +5,7 @@ metadata:
   name: analytics-service
   namespace: skymechanics
 spec:
-  replicas: 2
+  replicas: 1
   selector:
     matchLabels:
       app: analytics-service

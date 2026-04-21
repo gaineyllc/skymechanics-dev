@@ -5,7 +5,7 @@ metadata:
   name: mechanics-service
   namespace: skymechanics
 spec:
-  replicas: 2
+  replicas: 1
   selector:
     matchLabels:
       app: mechanics-service

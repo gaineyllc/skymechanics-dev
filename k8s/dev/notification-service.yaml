@@ -5,7 +5,7 @@ metadata:
   name: notification-service
   namespace: skymechanics
 spec:
-  replicas: 2
+  replicas: 1
   selector:
     matchLabels:
       app: notification-service
