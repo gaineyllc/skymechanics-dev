@@ -2,11 +2,13 @@ FROM python:3.12-slim
 
 WORKDIR /app
 
+# Copy shared models first (needed before service code)
+COPY shared /app/shared
+
 COPY services/aircraft-service/requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 COPY services/aircraft-service/ .
-COPY shared /app/shared
 
 EXPOSE 8205
 

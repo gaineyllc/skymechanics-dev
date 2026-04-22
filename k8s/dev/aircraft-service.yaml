@@ -25,7 +25,7 @@ spec:
         - name: PORT
           value: "8205"
         - name: FALKORDB_HOST
-          value: "skymechanics-falkordb"
+          value: "falkordb"
         - name: FALKORDB_PORT
           value: "6379"
         - name: FALKORDB_PASSWORD

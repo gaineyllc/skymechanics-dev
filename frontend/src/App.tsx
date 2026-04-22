@@ -19,6 +19,8 @@ import OnboardingSuccess from './pages/OnboardingSuccess'
 import QuickStartWizard from './components/QuickStartWizard'
 import { Admin } from './pages/Admin'
 import Login from './pages/Login'
+import OwnerRegister from './pages/Register/OwnerRegister'
+import MechanicRegister from './pages/Register/MechanicRegister'
 
 const engine = new Styletron()
 
@@ -41,6 +43,8 @@ export default function App() {
             <Layout>
               <Routes>
                 <Route path="/login" element={<Login />} />
+                <Route path="/register/owner" element={<OwnerRegister />} />
+                <Route path="/register/mechanic" element={<MechanicRegister />} />
                 <Route path="/" element={<Onboarding />} />
                 <Route path="/onboarding-success" element={<OnboardingSuccess />} />
                 <Route path="/quick-start" element={<QuickStartWizard />} />

@@ -26,6 +26,9 @@ class Settings(BaseSettings):
     FALKORDB_PASSWORD: str = ""
     FALKORDB_DATABASE_NAME: str = "falkordb"
 
+    # Graph name for multi-tenancy
+    FALKORDB_GRAPH_NAME: str = "skymechanics"
+
     # Redis settings - store as string, parse in validator
     REDIS_HOST: str = "localhost"
     REDIS_PORT_STR: str | int = "6379"

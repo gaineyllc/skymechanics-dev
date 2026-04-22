@@ -20,8 +20,8 @@ spec:
       serviceAccountName: skymechanics-sa
       containers:
       - name: auth-service
-        image: ghcr.io/gaineyllc/auth-service:latest
-        imagePullPolicy: Always
+        image: skymechanics-dev-auth-service:dev
+        imagePullPolicy: Never
         ports:
         - containerPort: 8200
           name: http
@@ -29,15 +29,18 @@ spec:
         - name: PORT
           value: "8200"
         - name: DATABASE_URL
-          valueFrom:
-            secretKeyRef:
-              name: skymechanics-secrets
-              key: DATABASE_URL
+          value: "postgresql://skymechanics:skymechanics-dev@postgres:5432/skymechanics"
         - name: JWT_SECRET
           valueFrom:
             secretKeyRef:
               name: skymechanics-secrets
               key: JWT_SECRET
+        - name: FALKORDB_HOST
+          value: falkordb
+        - name: FALKORDB_PORT
+          value: "6379"
+        - name: FALKORDB_PASSWORD
+          value: "skymechanics-dev"
         resources:
           requests:
             memory: "256Mi"
@@ -47,13 +50,13 @@ spec:
             cpu: "500m"
         livenessProbe:
           httpGet:
-            path: /api/v1/health
+            path: /
             port: 8200
           initialDelaySeconds: 10
           periodSeconds: 10
         readinessProbe:
           httpGet:
-            path: /api/v1/ready
+            path: /ready
             port: 8200
           initialDelaySeconds: 5
           periodSeconds: 5

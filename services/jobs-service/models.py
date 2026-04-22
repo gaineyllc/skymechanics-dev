@@ -80,6 +80,44 @@ class MechanicUpdateRequest(BaseModel):
 
 # ========== Jobs Service Models ==========
 
+class JobAssignRequest(BaseModel):
+    """Request to assign a job to a mechanic."""
+    mechanic_id: int
+
+
+class JobCompleteRequest(BaseModel):
+    """Request to complete a job with signatures."""
+    mechanic_signature: str  # Base64 encoded image or hash
+    owner_signature: Optional[str] = None
+    parts_used: List[Dict[str, Any]] = Field(default_factory=list)
+    labor_hours: Optional[float] = None
+    labor_cost: Optional[float] = None
+    total_cost: Optional[float] = None
+
+
+class JobSummaryResponse(BaseModel):
+    """Response for job summary with cost breakdown."""
+    job_id: int
+    customer_id: int
+    aircraft_id: Optional[int]
+    aircraft_tail_number: Optional[str]
+    title: str
+    description: Optional[str]
+    status: str
+    priority: str
+    mechanic_id: Optional[int]
+    mechanic_name: Optional[str]
+    completed_at: Optional[datetime]
+    labor_hours: Optional[float]
+    parts_cost: Optional[float]
+    labor_cost: Optional[float]
+    total_cost: Optional[float]
+    parts_used: List[Dict[str, Any]]
+    signature_status: str  # "pending", "mechanic_signed", "owner_signed", "completed"
+    created_at: datetime
+    updated_at: datetime
+
+
 class JobCreateRequest(BaseModel):
     """Request to create a new job."""
     customer_id: int

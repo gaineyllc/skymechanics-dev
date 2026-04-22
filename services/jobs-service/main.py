@@ -4,6 +4,7 @@ Handles job management, scheduling, and dispatch.
 """
 from fastapi import FastAPI, HTTPException, Depends, Header
 from fastapi.responses import JSONResponse
+from fastapi.websockets import WebSocket, WebSocketDisconnect
 from pydantic import BaseModel, Field
 from typing import Optional, List, Dict, Any
 from datetime import datetime, timedelta
@@ -11,20 +12,32 @@ import os
 import base64
 from hashlib import sha256
 import json
+import asyncio
 
 # Configuration
 FALKORDB_HOST = os.getenv("FALKORDB_HOST", "falkordb")
 FALKORDB_PORT = int(os.getenv("FALKORDB_PORT", 6379))
-FALKORDB_PASSWORD = os.getenv("FALKORDB_PASSWORD", None)
+FALKORDB_PASSWORD = os.getenv("FALKORDB_PASSWORD", "")
 TENANT_ID = os.getenv("TENANT_ID", "default")
 
 # FastAPI app
 app = FastAPI(title="Jobs Service", version="1.0.0")
 
 
+# FalkorDB client helper
+def get_graph():
+    """Get FalkorDB graph instance."""
+    import falkordb
+    client = falkordb.FalkorDB(
+        host=FALKORDB_HOST,
+        port=FALKORDB_PORT,
+        password=FALKORDB_PASSWORD
+    )
+    return client.select_graph("skymechanics")
+
+
 # Pydantic models
 class JobCreateRequest(BaseModel):
-    customer_id: int
     aircraft_id: Optional[int] = None
     title: str
     description: Optional[str] = None
@@ -103,7 +116,7 @@ class FalkorDBClient:
         self.host = host
         self.port = port
         self.password = FALKORDB_PASSWORD
-        self.graph_name = "tenant_default"
+        self.graph_name = "skymechanics"
         self._client = None
         self._graph = None
     
@@ -229,10 +242,10 @@ async def get_job(job_id: int):
     try:
         query = """
         MATCH (j:Job)
-        WHERE id(j) = $job_id
-        OPTIONAL MATCH (j)-[:ASSIGNED_TO]->(c:Customer)
-        OPTIONAL MATCH (j)-[:ASSIGNED_TO]->(m:Mechanic)
-        RETURN id(j) AS job_id, c.id AS customer_id, m.id AS mechanic_id, m.name AS mechanic_name, j.title AS title, j.description AS description, j.status AS status, j.priority AS priority, j.created_at AS created_at
+        WHERE j.id = $job_id
+        OPTIONAL MATCH (c:Customer)<-[:OWNS]-(a:Aircraft)<-[:OWNS]-(c)
+        OPTIONAL MATCH (m:Mechanic)-[:ASSIGNED_TO]->(j)
+        RETURN j.id AS job_id, c.id AS customer_id, m.id AS mechanic_id, m.name AS mechanic_name, j.title AS title, j.description AS description, j.status AS status, j.priority AS priority, j.created_at AS created_at
         """
         result = db.execute(query, {"job_id": job_id})
         
@@ -243,7 +256,7 @@ async def get_job(job_id: int):
         
         return JobResponse(
             job_id=row["job_id"],
-            customer_id=row.get("customer_id", 0),
+            customer_id=row.get("customer_id") or 0,
             title=row["title"],
             description=row.get("description"),
             status=row["status"],
@@ -333,8 +346,8 @@ async def list_jobs(status: Optional[str] = None, priority: Optional[str] = None
         query = f"""
         MATCH (j:Job)
         {where_clause}
-        OPTIONAL MATCH (j)-[:ASSIGNED_TO]->(m:Mechanic)
-        RETURN id(j) AS job_id, m.id AS mechanic_id, m.name AS mechanic_name, j.title AS title, j.description AS description, j.status AS status, j.priority AS priority, j.created_at AS created_at
+        OPTIONAL MATCH (m:Mechanic)-[:ASSIGNED_TO]->(j)
+        RETURN j.id AS job_id, m.id AS mechanic_id, m.name AS mechanic_name, j.title AS title, j.description AS description, j.status AS status, j.priority AS priority, j.created_at AS created_at
         """
         
         result = db.execute(query, params)
@@ -369,10 +382,10 @@ async def assign_job(job_id: int, request: JobAssignRequest):
     try:
         query = """
         MATCH (j:Job)
-        WHERE id(j) = $job_id
+        WHERE j.id = $job_id
         MATCH (m:Mechanic {id: $mechanic_id})
         CREATE (j)-[:ASSIGNED_TO]->(m)
-        RETURN id(j) AS job_id
+        RETURN j.id AS job_id
         """
         result = db.execute(query, {
             "job_id": job_id,
@@ -533,6 +546,206 @@ PARTS USED:
         raise HTTPException(status_code=500, detail=f"Failed to export PDF: {str(e)}")
 
 
+# WebSocket endpoints for real-time updates
+active_connections: List[WebSocket] = []
+
+
+@app.websocket("/ws/jobs")
+async def jobs_websocket(websocket: WebSocket):
+    """WebSocket endpoint for real-time job updates."""
+    await websocket.accept()
+    active_connections.append(websocket)
+    
+    try:
+        # Send initial connection confirmation
+        await websocket.send_json({
+            "type": "connected",
+            "message": "WebSocket connection established for jobs",
+            "timestamp": datetime.utcnow().isoformat()
+        })
+        
+        while True:
+            # Keep connection alive and handle incoming messages
+            data = await websocket.receive_text()
+            
+            try:
+                message = json.loads(data) if data else {}
+            except json.JSONDecodeError:
+                message = {"raw": data}
+            
+            if message.get("type") == "subscribe":
+                # Subscribe to job updates
+                job_id = message.get("job_id")
+                await websocket.send_json({
+                    "type": "subscribed",
+                    "job_id": job_id,
+                    "timestamp": datetime.utcnow().isoformat()
+                })
+            elif message.get("type") == "heartbeat":
+                # Handle heartbeat requests
+                await websocket.send_json({
+                    "type": "heartbeat",
+                    "timestamp": datetime.utcnow().isoformat()
+                })
+            
+    except WebSocketDisconnect:
+        active_connections.remove(websocket)
+        print(f"WebSocket disconnected")
+    except Exception as e:
+        if websocket in active_connections:
+            active_connections.remove(websocket)
+        print(f"WebSocket error: {e}")
+
+
+@app.post("/ws/jobs/broadcast")
+async def broadcast_job_update(job_id: int, status: str):
+    """Broadcast job status update to all connected clients."""
+    message = {
+        "type": "job_update",
+        "job_id": job_id,
+        "status": status,
+        "timestamp": datetime.utcnow().isoformat()
+    }
+    
+    disconnected = []
+    for connection in active_connections:
+        try:
+            await connection.send_json(message)
+        except Exception:
+            disconnected.append(connection)
+    
+    for conn in disconnected:
+        active_connections.remove(conn)
+    
+    return {
+        "message": "Broadcast sent",
+        "connections_affected": len(active_connections) - len(disconnected)
+    }
+
+
+# === P0 DEMO ENDPOINTS ===
+
+
+@app.put("/jobs/{job_id}/assign")
+async def assign_job_to_mechanic(job_id: int, request: JobAssignRequest):
+    """Assign a mechanic to a job."""
+    try:
+        graph = get_graph()
+        
+        mechanic_id = request.mechanic_id
+        
+        # Assign mechanic to job
+        query = """MATCH (j:Job {id: $job_id}), (m:Mechanic {id: $mechanic_id})
+        MERGE (j)-[r:ASSIGNED_TO]->(m)
+        ON CREATE SET r.assigned_at = toString(timestamp())
+        RETURN j.id as job_id, m.id as mechanic_id, m.name as mechanic_name, toString(timestamp()) as assigned_at
+        """
+        result = graph.query(query, {"job_id": job_id, "mechanic_id": mechanic_id})
+        
+        if not result.result_set:
+            raise HTTPException(status_code=404, detail=f"Job {job_id} or Mechanic {mechanic_id} not found")
+        
+        row = result.result_set[0]
+        return {
+            "job_id": row[0],
+            "mechanic_id": row[1],
+            "mechanic_name": row[2],
+            "assigned_at": row[3]
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to assign job: {str(e)}")
+
+
+@app.post("/jobs/{job_id}/complete")
+async def complete_job(job_id: int, request: JobCompleteRequest):
+    """Complete a job with digital signature."""
+    try:
+        graph = get_graph()
+        
+        # Mark job as completed
+        query = """MATCH (j:Job {id: $job_id})
+        OPTIONAL MATCH (j)-[:ASSIGNED_TO]->(m:Mechanic)
+        SET j.status = 'completed',
+            j.completed_at = toString(timestamp()),
+            j.signature = $signature,
+            j.labor_hours = $labor_hours,
+            j.updated_at = toString(timestamp())
+        RETURN j.id as job_id, j.status as status, toString(timestamp()) as completed_at,
+            m.id as mechanic_id, m.name as mechanic_name
+        """
+        result = graph.query(query, {
+            "job_id": job_id,
+            "signature": request.mechanic_signature,
+            "labor_hours": request.labor_hours
+        })
+        
+        if not result.result_set:
+            raise HTTPException(status_code=404, detail=f"Job {job_id} not found")
+        
+        row = result.result_set[0]
+        return {
+            "job_id": row[0],
+            "status": row[1],
+            "completed_at": row[2],
+            "mechanic_id": row[3],
+            "mechanic_name": row[4]
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to complete job: {str(e)}")
+
+
+@app.get("/jobs/{job_id}/summary")
+async def get_job_summary(job_id: int):
+    """Get job summary with cost breakdown and completion details."""
+    try:
+        graph = get_graph()
+        
+        # Get job details with associated data
+        query = """MATCH (j:Job {id: $job_id})
+        OPTIONAL MATCH (j)-[:ASSIGNED_TO]->(m:Mechanic)
+        OPTIONAL MATCH (j)-[:CREATED_FOR]->(a:Aircraft)
+        OPTIONAL MATCH (j)-[r:USES_PART]->(p:Part)
+        WITH j, m, a, r, p,
+            CASE WHEN r IS NOT NULL THEN sum(r.cost) ELSE 0 END as parts_cost,
+            CASE WHEN j.labor_hours IS NOT NULL THEN j.labor_hours * COALESCE(j.labor_rate, 100) ELSE 0 END as labor_cost
+        RETURN {
+            job_id: j.id,
+            customer_id: j.customer_id,
+            aircraft_id: a.id,
+            aircraft_tail_number: a.tail_number,
+            title: j.title,
+            description: j.description,
+            status: j.status,
+            priority: j.priority,
+            mechanic_id: m.id,
+            mechanic_name: m.name,
+            completed_at: j.completed_at,
+            labor_hours: j.labor_hours,
+            parts_cost: parts_cost,
+            labor_cost: labor_cost,
+            total_cost: labor_cost + parts_cost,
+            parts_used: collect({id: p.id, name: p.name, cost: r.cost}),
+            signature_status: CASE WHEN j.signature IS NOT NULL THEN 'mechanic_signed' ELSE 'pending' END,
+            created_at: j.created_at,
+            updated_at: j.updated_at
+        } as data
+        """
+        result = graph.query(query, {"job_id": job_id})
+        
+        if not result.result_set or not result.result_set[0][0]:
+            raise HTTPException(status_code=404, detail=f"Job {job_id} not found")
+        
+        return result.result_set[0][0]
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to get job summary: {str(e)}")
+
+
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8002)
+    uvicorn.run(app, host="0.0.0.0", port=8002, ws_max_size=1048576, ws_ping_interval=30, ws_ping_timeout=20)

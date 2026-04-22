@@ -20,15 +20,20 @@ TENANT_ID = os.getenv("FALKORDB_TENANT", "default")
 
 # Connect to FalkorDB
 print(f"Connecting to FalkorDB at {FALKORDB_HOST}:{FALKORDB_PORT}...")
-db = FalkorDB(host=FALKORDB_HOST, port=FALKORDB_PORT)
+db = FalkorDB(host=FALKORDB_HOST, port=FALKORDB_PORT, password='skymechanics')
 
-# Graph name per tenant
-GRAPH_NAME = f"tenant_{TENANT_ID}"
+# Graph name
+GRAPH_NAME = "skymechanics"
 
 # Clear existing graph
 print(f"Seeding graph '{GRAPH_NAME}' with test data...")
-print("Clearing existing data...")
-db.delete_graph(GRAPH_NAME)
+
+# Select graph first
+graph = db.select_graph(GRAPH_NAME)
+
+# Delete all nodes and relationships
+graph.delete()
+print("Cleared existing graph data")
 
 # Select graph
 graph = db.select_graph(GRAPH_NAME)
@@ -41,41 +46,41 @@ customers = [
 ]
 
 for c in customers:
-    query = "CREATE (c:Customer {id: $id, name: $name, email: $email, phone: $phone, type: $type, created_at: datetime()})"
+    query = "CREATE (c:Customer {id: $id, name: $name, email: $email, phone: $phone, type: $type, created_at: toString(timestamp())})"
     graph.query(query, params=c)
 print(f"Created {len(customers)} customers")
 
 # ===== MECHANICS =====
 mechanics = [
     {"id": 1, "name": "James 'Helo' Hamilton", "email": "james.hamilton@skymechanics.dev", "phone": "+1-555-1001", 
-     "specialties": ["AW609", "S-76D"], "license_number": "FAA-MA-12345", "certifications": ["Powerplant", "Airframe"], "availability": {"monday": "08:00-17:00", "tuesday": "08:00-17:00"}},
+     "specialties": "AW609,S-76D", "license_number": "FAA-MA-12345", "certifications": "Powerplant,Airframe"},
     {"id": 2, "name": "Sarah Chen", "email": "sarah.chen@skymechanics.dev", "phone": "+1-555-1002", 
-     "specialties": ["ACH160", "H145"], "license_number": "FAA-MA-23456", "certifications": ["Powerplant"], "availability": {"tuesday": "09:00-18:00", "wednesday": "09:00-18:00"}},
+     "specialties": "ACH160,H145", "license_number": "FAA-MA-23456", "certifications": "Powerplant"},
     {"id": 3, "name": "Michael O'Connor", "email": "mike.oconnor@skymechanics.dev", "phone": "+1-555-1003", 
-     "specialties": ["AW609", "525"], "license_number": "FAA-MA-34567", "certifications": ["Powerplant", "Airframe"], "availability": {"wednesday": "08:00-17:00", "thursday": "08:00-17:00"}},
+     "specialties": "AW609,525", "license_number": "FAA-MA-34567", "certifications": "Powerplant,Airframe"},
     {"id": 4, "name": "Elena Rodriguez", "email": "elena.rodriguez@skymechanics.dev", "phone": "+1-555-1004", 
-     "specialties": ["ACH160", "ACH145"], "license_number": "FAA-MA-45678", "certifications": ["Airframe"], "availability": {"thursday": "09:00-18:00", "friday": "09:00-18:00"}},
+     "specialties": "ACH160,ACH145", "license_number": "FAA-MA-45678", "certifications": "Airframe"},
     {"id": 5, "name": "David Park", "email": "david.park@skymechanics.dev", "phone": "+1-555-1005", 
-     "specialties": ["S-76D", "525", "AW609"], "license_number": "FAA-MA-56789", "certifications": ["Powerplant", "Airframe"], "availability": {"monday": "08:00-17:00", "friday": "08:00-17:00"}},
+     "specialties": "S-76D,525,AW609", "license_number": "FAA-MA-56789", "certifications": "Powerplant,Airframe"},
 ]
 
 for m in mechanics:
-    query = "CREATE (m:Mechanic {id: $id, name: $name, email: $email, phone: $phone, specialties: $specialties, license_number: $license_number, certifications: $certifications, availability: $availability, created_at: datetime()})"
+    query = "CREATE (m:Mechanic {id: $id, name: $name, email: $email, phone: $phone, specialties: $specialties, license_number: $license_number, certifications: $certifications, created_at: toString(timestamp())})"
     graph.query(query, params=m)
 print(f"Created {len(mechanics)} mechanics")
 
 # ===== AIRCRAFT =====
 aircraft = [
-    {"id": 1, "tail_number": "N123AW", "model": "AW609", "year": 2024, "status": "available", "location": {"lat": 40.7128, "lon": -74.0060}, "owner_id": 2},
-    {"id": 2, "tail_number": "N456AW", "model": "AW609", "year": 2024, "status": "available", "location": {"lat": 34.0522, "lon": -118.2437}, "owner_id": 2},
-    {"id": 3, "tail_number": "N789S7", "model": "S-76D", "year": 2022, "status": "available", "location": {"lat": 40.7128, "lon": -74.0060}, "owner_id": 1},
-    {"id": 4, "tail_number": "N234A1", "model": "ACH160", "year": 2023, "status": "available", "location": {"lat": 34.0522, "lon": -118.2437}, "owner_id": 3},
-    {"id": 5, "tail_number": "N567A1", "model": "ACH145", "year": 2021, "status": "in_maintenance", "location": {"lat": 40.7128, "lon": -74.0060}, "owner_id": 1},
-    {"id": 6, "tail_number": "N89052", "model": "525", "year": 2022, "status": "available", "location": {"lat": 41.8781, "lon": -87.6298}, "owner_id": 3},
+    {"id": 1, "tail_number": "N123AW", "model": "AW609", "year": 2024, "status": "available", "location": "40.7128,-74.0060", "owner_id": 2},
+    {"id": 2, "tail_number": "N456AW", "model": "AW609", "year": 2024, "status": "available", "location": "34.0522,-118.2437", "owner_id": 2},
+    {"id": 3, "tail_number": "N789S7", "model": "S-76D", "year": 2022, "status": "available", "location": "40.7128,-74.0060", "owner_id": 1},
+    {"id": 4, "tail_number": "N234A1", "model": "ACH160", "year": 2023, "status": "available", "location": "34.0522,-118.2437", "owner_id": 3},
+    {"id": 5, "tail_number": "N567A1", "model": "ACH145", "year": 2021, "status": "in_maintenance", "location": "40.7128,-74.0060", "owner_id": 1},
+    {"id": 6, "tail_number": "N89052", "model": "525", "year": 2022, "status": "available", "location": "41.8781,-87.6298", "owner_id": 3},
 ]
 
 for a in aircraft:
-    query = "CREATE (a:Aircraft {id: $id, tail_number: $tail_number, model: $model, year: $year, status: $status, location: $location, owner_id: $owner_id, created_at: datetime()})"
+    query = "CREATE (a:Aircraft {id: $id, tail_number: $tail_number, model: $model, year: $year, status: $status, location: $location, owner_id: $owner_id, created_at: toString(timestamp())})"
     graph.query(query, params=a)
 print(f"Created {len(aircraft)} aircraft")
 
@@ -94,8 +99,12 @@ jobs = [
 ]
 
 for j in jobs:
-    query = "CREATE (j:Job {id: $id, title: $title, description: $description, status: $status, priority: $priority, scheduled_date: $scheduled_date, completed_date: $completed_date, created_at: datetime()})"
-    graph.query(query, params=j)
+    # Build query dynamically to handle optional completed_date
+    base_query = "CREATE (j:Job {id: $id, title: $title, description: $description, status: $status, priority: $priority, scheduled_date: $scheduled_date"
+    if "completed_date" in j and j["completed_date"]:
+        base_query += ", completed_date: $completed_date"
+    base_query += ", created_at: toString(timestamp())})"
+    graph.query(base_query, params=j)
 print(f"Created {len(jobs)} jobs")
 
 # ===== RELATIONSHIPS =====
@@ -110,30 +119,30 @@ print(f"Created OWNS relationships")
 # Mechanic assigned to Job
 for j in jobs:
     if "mechanic_id" in j:
-        query = "MATCH (m:Mechanic {id: $mechanic_id}), (j:Job {id: $id}) CREATE (m)-[:ASSIGNED]->(j)"
+        query = "MATCH (m:Mechanic {id: $mechanic_id}), (j:Job {id: $id}) CREATE (m)-[:ASSIGNED_TO]->(j)"
         graph.query(query, params={"id": j["id"], "mechanic_id": j["mechanic_id"]})
-print(f"Created ASSIGNED relationships")
+print(f"Created ASSIGNED_TO relationships")
 
 # ===== CREATE TENANT NODE =====
-query = "CREATE (t:Tenant {id: $tenant_id, name: 'SkyMechanics', created_at: datetime()})"
-graph.query(query, params={"tenant_id": TENANT_ID})
+query = "CREATE (t:Tenant {id: 'skymechanics', name: 'SkyMechanics', created_at: toString(timestamp())})"
+graph.query(query)
 
 # Link all entities to tenant
 for c in customers:
-    query = "MATCH (t:Tenant {id: $tenant_id}), (c:Customer {id: $id}) CREATE (c)-[:BELONGS_TO]->(t)"
-    graph.query(query, params={"tenant_id": TENANT_ID, "id": c["id"]})
+    query = "MATCH (t:Tenant {id: 'skymechanics'}), (c:Customer {id: $id}) CREATE (c)-[:BELONGS_TO]->(t)"
+    graph.query(query, params={"id": c["id"]})
 
 for m in mechanics:
-    query = "MATCH (t:Tenant {id: $tenant_id}), (m:Mechanic {id: $id}) CREATE (m)-[:BELONGS_TO]->(t)"
-    graph.query(query, params={"tenant_id": TENANT_ID, "id": m["id"]})
+    query = "MATCH (t:Tenant {id: 'skymechanics'}), (m:Mechanic {id: $id}) CREATE (m)-[:BELONGS_TO]->(t)"
+    graph.query(query, params={"id": m["id"]})
 
 for a in aircraft:
-    query = "MATCH (t:Tenant {id: $tenant_id}), (a:Aircraft {id: $id}) CREATE (a)-[:BELONGS_TO]->(t)"
-    graph.query(query, params={"tenant_id": TENANT_ID, "id": a["id"]})
+    query = "MATCH (t:Tenant {id: 'skymechanics'}), (a:Aircraft {id: $id}) CREATE (a)-[:BELONGS_TO]->(t)"
+    graph.query(query, params={"id": a["id"]})
 
 for j in jobs:
-    query = "MATCH (t:Tenant {id: $tenant_id}), (j:Job {id: $id}) CREATE (j)-[:BELONGS_TO]->(t)"
-    graph.query(query, params={"tenant_id": TENANT_ID, "id": j["id"]})
+    query = "MATCH (t:Tenant {id: 'skymechanics'}), (j:Job {id: $id}) CREATE (j)-[:BELONGS_TO]->(t)"
+    graph.query(query, params={"id": j["id"]})
 
 print(f"Linked all entities to tenant '{TENANT_ID}'")
 

@@ -139,8 +139,17 @@ export function Login() {
         </form>
 
         <p style={{ textAlign: 'center', fontSize: '14px', color: '#666' }}>
-          Don't have an account? <a href="/onboarding" style={Link}>Sign up</a>
+          Don't have an account?
         </p>
+        <div style={{ display: 'flex', gap: '12px', justifyContent: 'center' }}>
+          <a href="/register/owner" style={{ ...Link, textDecoration: 'underline' }}>
+            Create Owner Account
+          </a>
+          <span style={{ color: '#999' }}>or</span>
+          <a href="/register/mechanic" style={{ ...Link, textDecoration: 'underline' }}>
+            Create Mechanic Account
+          </a>
+        </div>
       </div>
     </div>
   )

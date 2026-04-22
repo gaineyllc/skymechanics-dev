@@ -4,36 +4,39 @@ metadata:
   name: skymechanics-ingress
   namespace: skymechanics
   annotations:
-    traefik.ingress.kubernetes.io/router.entrypoints: web
+    nginx.ingress.kubernetes.io/rewrite-target: /
+    nginx.ingress.kubernetes.io/ssl-redirect: "false"
 spec:
+  ingressClassName: nginx
   rules:
-  - http:
-      paths:
-      - path: /api/auth
-        pathType: Prefix
-        backend:
-          service:
-            name: auth-service
-            port:
-              number: 8000
-      - path: /api/mechanics
-        pathType: Prefix
-        backend:
-          service:
-            name: mechanics-service
-            port:
-              number: 8001
-      - path: /api/jobs
-        pathType: Prefix
-        backend:
-          service:
-            name: jobs-service
-            port:
-              number: 8002
-      - path: /api
-        pathType: Prefix
-        backend:
-          service:
-            name: auth-service
-            port:
-              number: 8000
+    - host: skymechanics.local
+      http:
+        paths:
+          - path: /api/v1
+            pathType: Prefix
+            backend:
+              service:
+                name: auth-service
+                port:
+                  number: 8200
+          - path: /api/v1
+            pathType: Prefix
+            backend:
+              service:
+                name: jobs-service
+                port:
+                  number: 8202
+          - path: /api/v1
+            pathType: Prefix
+            backend:
+              service:
+                name: aircraft-service
+                port:
+                  number: 8201
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: frontend
+                port:
+                  number: 80
