@@ -26,7 +26,7 @@ export interface OwnerRegisterResponse {
 }
 
 export const registerOwner = async (data: OwnerRegisterRequest): Promise<OwnerRegisterResponse> => {
-  const response = await authApi.post('/api/v1/owner/register', data)
+  const response = await authApi.post('/onboard/owner', data)
   return response.data
 }
 
@@ -47,7 +47,7 @@ export interface MechanicRegisterResponse {
 }
 
 export const registerMechanic = async (data: MechanicRegisterRequest): Promise<MechanicRegisterResponse> => {
-  const response = await authApi.post('/api/v1/mechanic/register', data)
+  const response = await authApi.post('/onboard/mechanic', data)
   return response.data
 }
 

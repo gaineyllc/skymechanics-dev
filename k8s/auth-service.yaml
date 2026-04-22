@@ -40,7 +40,10 @@ spec:
         - name: FALKORDB_PORT
           value: "6379"
         - name: FALKORDB_PASSWORD
-          value: "skymechanics-dev"
+          valueFrom:
+            secretKeyRef:
+              name: skymechanics-secrets
+              key: FALKORDB_PASSWORD
         resources:
           requests:
             memory: "256Mi"

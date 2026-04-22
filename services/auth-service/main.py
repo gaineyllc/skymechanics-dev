@@ -84,8 +84,30 @@ def get_db_connection():
 
 def get_falkordb_graph():
     import falkordb
-    db = falkordb.FalkorDB(host=FALKORDB_HOST, port=FALKORDB_PORT, password=FALKORDB_PASSWORD)
-    return db.select_graph("tenant_default")
+    import redis
+    try:
+        # Create a Redis connection with password first
+        r = redis.Redis(
+            host=FALKORDB_HOST,
+            port=FALKORDB_PORT,
+            username="default",
+            password=FALKORDB_PASSWORD or None
+        )
+        r.ping()  # Verify connection
+        
+        # Then connect with FalkorDB
+        db = falkordb.FalkorDB(
+            host=FALKORDB_HOST,
+            port=FALKORDB_PORT,
+            username="default",
+            password=FALKORDB_PASSWORD or None
+        )
+        return db.select_graph("skymechanics")
+    except Exception as e:
+        print(f"FalkorDB connection error: {e}")
+        import traceback
+        traceback.print_exc()
+        raise
 
 
 def hash_password(password: str) -> str:
@@ -260,30 +282,19 @@ async def onboard_owner(owner: OwnerRegister):
                VALUES (%s, %s, %s, %s, %s, %s) RETURNING user_id""",
             (owner.email, owner.first_name, owner.last_name, owner.phone, password_hash, "owner")
         )
-        user_id = cur.fetchone()["user_id"]
-        conn.commit()
-        cur.close()
-        conn.close()
+        fetch_result = cur.fetchone()
+        if not fetch_result:
+            cur.close()
+            conn.close()
+            raise HTTPException(status_code=500, detail="Failed to create user")
+        user_id = fetch_result.get("user_id")
+        if not user_id:
+            cur.close()
+            conn.close()
+            raise HTTPException(status_code=500, detail="User ID not returned from insert")
         
-        # Create organization and tenant in FalkorDB
+        # Create organization and tenant in FalkorDB first
         g = get_falkordb_graph()
-        
-        # First, create organization in PostgreSQL
-        cur.execute(
-            """INSERT INTO organizations (name, domain, is_active)
-               VALUES (%s, %s, %s) ON CONFLICT (name) DO NOTHING RETURNING org_id""",
-            (owner.org_name, owner.org_domain or owner.email.split("@")[1], True)
-        )
-        org_result = cur.fetchone()
-        org_id = org_result[0] if org_result else None
-        
-        # Link user to organization
-        cur.execute(
-            """INSERT INTO user_organizations (user_id, org_id, role, joined_at)
-               VALUES (%s, %s, %s, %s) ON CONFLICT (user_id, org_id) DO NOTHING""",
-            (user_id, org_id, "admin", datetime.utcnow())
-        )
-        conn.commit()
         
         # Get or create organization in FalkorDB
         result = g.query("MATCH (o:Organization {name: $name}) RETURN o", {"name": owner.org_name})
@@ -318,11 +329,41 @@ async def onboard_owner(owner: OwnerRegister):
             "phone": owner.phone,
         })
         
-        # Link owner to organization
+        # Link owner to organization in graph
         g.query("""
             MATCH (org:Organization {name: $org_name}), (u:Owner {id: $user_id})
             CREATE (u)-[:OWNS]->(org)
         """, {"org_name": owner.org_name, "user_id": user_id})
+        
+        # Now create organization in PostgreSQL
+        org_domain = owner.org_domain or owner.email.split("@")[1]
+        cur.execute(
+            """INSERT INTO organizations (name, domain, is_active)
+               VALUES (%s, %s, %s) ON CONFLICT (domain) DO UPDATE SET is_active = TRUE RETURNING org_id""",
+            (owner.org_name, org_domain, True)
+        )
+        org_result = cur.fetchone()
+        if not org_result:
+            # Try to find by domain
+            cur.execute("SELECT org_id FROM organizations WHERE domain = %s", (org_domain,))
+            org_result = cur.fetchone()
+        org_id = org_result.get("org_id") if org_result else None
+        
+        if org_id is None:
+            cur.close()
+            conn.close()
+            raise HTTPException(status_code=500, detail="Failed to create or find organization")
+        
+        # Link user to organization in PostgreSQL
+        cur.execute(
+            """INSERT INTO user_organizations (user_id, org_id, role, joined_at)
+               VALUES (%s, %s, %s, %s) ON CONFLICT (user_id, org_id) DO NOTHING""",
+            (user_id, org_id, "admin", datetime.utcnow())
+        )
+        
+        conn.commit()
+        cur.close()
+        conn.close()
         
         return {
             "message": "Owner account created",
@@ -333,6 +374,9 @@ async def onboard_owner(owner: OwnerRegister):
     except HTTPException:
         raise
     except Exception as e:
+        import traceback
+        print(f"Owner registration error: {e}")
+        print(traceback.format_exc())
         raise HTTPException(status_code=500, detail=f"Owner registration failed: {str(e)}")
 
 
@@ -468,6 +512,9 @@ async def register_owner(owner: OwnerRegister):
     except HTTPException:
         raise
     except Exception as e:
+        import traceback
+        print(f"Owner registration error: {e}")
+        print(traceback.format_exc())
         raise HTTPException(status_code=500, detail=f"Owner registration failed: {str(e)}")
 
 
